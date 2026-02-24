@@ -1,7 +1,7 @@
 const Branch=require('../models/Branch');
 
 exports.createBranch=async(req,res)=>{
-    const {schoolName,branchName}=req.body;
+    const {schoolName,branchName,location,status}=req.body;
     try
     {
         const existingBranch=await Branch.findOne({branchName:branchName})
@@ -13,8 +13,10 @@ exports.createBranch=async(req,res)=>{
         }
         const branch=await Branch.create({
             schoolName,
-            branchName
-        })
+            branchName,
+            location,
+            status
+        });
 
         await branch.save();
         res.status(201).json({
@@ -88,70 +90,81 @@ exports.getBranchById= async(req,res)=>{
         });
     }
 }
-exports.updateBranch=async (req,res)=>{
-    const { schoolName, branchName } = req.body;
-    try
-    {
-        const existingBranch=await Branch.findOne({branchName:branchName})
-        if(existingBranch){
-            return res.status(500).json({
-                success:false,
-                message:"Branch already exists"
-            })
-        }
 
-        const branch=await Branch.findByIdAndUpdate(req.params.id,
-            {schoolName,branchName},
-            {new:true}
-        );
-        if(!branch){
-            return res.status(404).json({
-                success:false,
-                message:'Branch not found'
-            });
-        }
-        res.status(200).json({
-            success:true,
-            message:'Branch updated successfully',
-            data:branch
-        });
-    }
-    catch(err){
-        console.error(err);
-        res.status(500).json({
-            success:false,
-            message:"Failed to update branch"
-        });
-    }
+exports.updateBranch = async (req, res) => {
+  const { schoolName, branchName, location ,status} = req.body;
 
+  try {
+    
+    const existingBranch = await Branch.findOne({
+      branchName: branchName,
+      status: "active",
+      _id: { $ne: req.params.id } // exclude current branch
+    });
 
-}
-
-exports.deleteBranch=async (req,res)=>{
-
-    try
-    {
-    const branch= await Branch.findById(req.params.id);
-
-    if(!branch){
-        return res.status(404).json({
+    if (existingBranch) {
+      return res.status(400).json({
         success: false,
-        message: 'Branch not found'
+        message: "Branch name already exists",
       });
     }
-    await branch.deleteOne();
+
+    // Update only if branch is active
+    const branch = await Branch.findOneAndUpdate(
+      { _id: req.params.id, status: "active" },
+      { schoolName, branchName, location,status },
+      { new: true }
+    );
+
+    if (!branch) {
+      return res.status(404).json({
+        success: false,
+        message: "Branch not found or inactive",
+      });
+    }
 
     res.status(200).json({
-        success:true,
-        message:"Branch deleted Successfully"
+      success: true,
+      message: "Branch updated successfully",
+      data: branch,
     });
-
-}
-catch(err){
+  } catch (err) {
     console.error(err);
     res.status(500).json({
-        success:false,
-        message:"Failed to delete branch"
+      success: false,
+      message: "Failed to update branch",
     });
-}
-}
+  }
+};
+
+
+exports.deleteBranch = async (req, res) => {
+  try {
+    const branch = await Branch.findByIdAndUpdate(
+      req.params.id,
+      { status: "inactive" },
+      { new: true }
+    );
+
+    if (!branch) {
+      return res.status(404).json({
+        success: false,
+        message: "Branch not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Branch deactivated successfully",
+      data: branch,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      success: false,
+      message: "Failed to deactivate branch",
+    });
+  }
+};
+
+

@@ -37,6 +37,7 @@ export default function BranchesPage() {
   const [successMessage, setSuccessMessage] = useState('');
 
   // Form state
+
   const [formData, setFormData] = useState({
     schoolName: '',
     branchName: '',
@@ -137,6 +138,7 @@ export default function BranchesPage() {
           setShowModal(false);
           setSuccessMessage('');
         }, 1500);
+
       } else {
         setError(response?.message || 'Operation failed');
       }
@@ -163,15 +165,17 @@ export default function BranchesPage() {
       });
 
       if (response && response.success) {
-        setSuccessMessage('Branch deleted successfully!');
+        setSuccessMessage('Branch deactivated successfully!');
         await fetchBranches();
+
         setTimeout(() => setSuccessMessage(''), 3000);
+        
       } else {
-        setError(response?.message || 'Delete failed');
+        setError(response?.message || 'Deactivation failed');
       }
     } catch (error) {
-      console.error('Error deleting branch:', error);
-      setError(error.message || 'Error deleting branch. Please try again.');
+      console.error('Error deactivating branch:', error);
+      setError(error.message || 'Error deactivating branch. Please try again.');
     }
   };
 

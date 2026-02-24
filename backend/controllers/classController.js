@@ -146,7 +146,7 @@ exports.updateClass = async (req, res) => {
         message: 'Class not found'
       });
     }
-
+    
 
     if (className) {
       const duplicateClass = await Class.findOne({
