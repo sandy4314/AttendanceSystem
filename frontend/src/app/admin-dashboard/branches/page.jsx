@@ -156,7 +156,7 @@ export default function BranchesPage() {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Are you sure you want to deactivate this branch? This action cannot be undone.')) return;
+    if (!confirm('Are you sure you want to delete this branch? This action cannot be undone.')) return;
 
     try {
       setError('');
