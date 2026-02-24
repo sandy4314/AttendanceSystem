@@ -3,14 +3,14 @@ const TeacherSubjectAssignment = require('../models/TeacherSubjectAssignment');
 
 exports.markAttendance = async (req, res) => {
   const { assignmentId, date, timeSlot, description, students } = req.body;
-
+  
   try {
     if (!assignmentId || !date || !timeSlot || !students) {
       return res.status(400).json({
         success: false,
         message: 'Missing required fields'
       });
-    }g
+    }
 
     // 1️⃣ Validate assignment
     const assignment = await TeacherSubjectAssignment.findById(assignmentId);
@@ -18,7 +18,7 @@ exports.markAttendance = async (req, res) => {
     if (!assignment || !assignment.isActive) {
       return res.status(404).json({
         success: false,
-        message: 'Invalid Assignment'
+        message: 'Invalid assignment'
       });
     }
 
@@ -74,9 +74,6 @@ exports.markAttendance = async (req, res) => {
 };
 
 
-
-
-
 exports.getStudentAttendance = async (req, res) => {
   const { studentId } = req.params;
 
@@ -100,6 +97,7 @@ exports.getStudentAttendance = async (req, res) => {
       success: false,
       message: 'Failed to fetch attendance'
     });
+
   }
 };
 
@@ -277,3 +275,4 @@ exports.updateStudentAttendance = async (req, res) => {
     });
   }
 };
+

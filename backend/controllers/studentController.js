@@ -5,7 +5,6 @@ const Class = require('../models/Class');
 const User = require('../models/User');
 const mongoose = require('mongoose');
 
-// Create Student
 exports.createStudent = async (req, res) => {
   const {
     fullName,
@@ -15,13 +14,10 @@ exports.createStudent = async (req, res) => {
     parentMobile,
     branch,
     classRef,
-    section,
-    username,
-    password
+    section
   } = req.body;
 
-  // Validate required fields
-  if (!fullName || !rollNo || !parentName || !parentMobile || !branch || !classRef || !section || !username || !password) {
+  if (!fullName || !rollNo || !parentName || !parentMobile || !branch || !classRef || !section) {
     return res.status(400).json({
       success: false,
       message: 'Missing required fields'
@@ -32,33 +28,18 @@ exports.createStudent = async (req, res) => {
   session.startTransaction();
 
   try {
-    // Check if username already exists
-    const existingUser = await User.findOne({ username }).session(session);
-    if (existingUser) {
-      await session.abortTransaction();
-      session.endSession();
-      return res.status(400).json({
-        success: false,
-        message: 'Username already exists'
-      });
-    }
-
-    // Check roll number uniqueness in this section
-    const existingRoll = await Student.findOne({ 
-      rollNo, 
-      section: section 
-    }).session(session);
-    
+    // 1️⃣ Roll number uniqueness
+    const existingRoll = await User.findOne({ username: rollNo }).session(session);
     if (existingRoll) {
       await session.abortTransaction();
       session.endSession();
       return res.status(400).json({
         success: false,
-        message: 'Student with this roll number already exists in this section'
+        message: 'Student with this roll number already exists'
       });
     }
 
-    // Validate branch
+    // 2️⃣ Branch validation
     const branchValidate = await Branch.findById(branch).session(session);
     if (!branchValidate) {
       await session.abortTransaction();
@@ -66,7 +47,7 @@ exports.createStudent = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Branch not found' });
     }
 
-    // Validate class
+    // 3️⃣ Class validation
     const clsValidate = await Class.findById(classRef).session(session);
     if (!clsValidate) {
       await session.abortTransaction();
@@ -83,7 +64,7 @@ exports.createStudent = async (req, res) => {
       });
     }
 
-    // Validate section
+    // 4️⃣ Section validation
     const sectionValidate = await Section.findById(section).session(session);
     if (!sectionValidate) {
       await session.abortTransaction();
@@ -100,19 +81,7 @@ exports.createStudent = async (req, res) => {
       });
     }
 
-    // Create User first
-    const user = await User.create(
-      [{
-        name: fullName,
-        username: username,
-        password: password,
-        role: 'student',
-        linkedId: null
-      }],
-      { session }
-    );
-
-    // Create Student with reference to User
+    // 5️⃣ Create student
     const student = await Student.create(
       [{
         fullName,
@@ -122,27 +91,28 @@ exports.createStudent = async (req, res) => {
         parentMobile,
         branch,
         classRef,
-        section,
-        username: username,
-        user: user[0]._id
+        section
       }],
       { session }
     );
 
-    // Update User with student reference
-    user[0].linkedId = student[0]._id;
-    await user[0].save({ session });
+    // 6️⃣ Create user
+    const user = await User.create(
+      [{
+        name: fullName,
+        username: rollNo,
+        password: parentMobile,
+        role: 'student',
+        linkedId: student[0]._id
+      }],
+      { session }
+    );
+
+    student[0].user = user[0]._id;
+    await student[0].save({ session });
 
     await session.commitTransaction();
     session.endSession();
-
-    // Populate references for response
-    await student[0].populate([
-      { path: 'branch', select: 'branchName' },
-      { path: 'classRef', select: 'className' },
-      { path: 'section', select: 'sectionName' },
-      { path: 'user', select: 'username role' }
-    ]);
 
     res.status(201).json({
       success: true,
@@ -154,22 +124,23 @@ exports.createStudent = async (req, res) => {
     await session.abortTransaction();
     session.endSession();
 
-    console.error('Error creating student:', err);
+    console.error(err);
     res.status(500).json({
       success: false,
-      message: err.message || 'Failed to create student'
+      message: 'Failed to create student'
     });
   }
 };
 
-// Get All Students
+//Get All Students
+
 exports.getStudents = async (req, res) => {
   try {
     const students = await Student.find()
       .populate('branch', 'branchName')
       .populate('classRef', 'className')
       .populate('section', 'sectionName')
-      .populate('user', 'username role');
+      .populate('user', 'username');
 
     res.status(200).json({
       success: true,
@@ -178,7 +149,7 @@ exports.getStudents = async (req, res) => {
     });
 
   } catch (err) {
-    console.error('Error fetching students:', err);
+    console.error(err);
     res.status(500).json({
       success: false,
       message: 'Failed to fetch students'
@@ -186,14 +157,15 @@ exports.getStudents = async (req, res) => {
   }
 };
 
-// Get Student by Id
+//Get Student by Id
+
 exports.getStudentById = async (req, res) => {
   try {
     const student = await Student.findById(req.params.id)
       .populate('branch', 'branchName')
       .populate('classRef', 'className')
       .populate('section', 'sectionName')
-      .populate('user', 'username role');
+      .populate('user', 'username');
 
     if (!student) {
       return res.status(404).json({
@@ -216,23 +188,22 @@ exports.getStudentById = async (req, res) => {
   }
 };
 
-// Get Students by Class
+//Get Student by classId
+
 exports.getStudentsByClass = async (req, res) => {
   try {
-    const cls = await Class.findById(req.params.classId);
+    const cls=await Class.findById(req.params.classId);
     
-    if (!cls) {
+    if(!cls){
       return res.status(404).json({
-        success: false,
-        message: "Class not found"
+        success:false,
+        message:"class not found"
       });
     }
 
     const students = await Student.find({
       classRef: req.params.classId
-    })
-      .populate('section', 'sectionName')
-      .populate('user', 'username');
+    }).populate('section', 'sectionName');
 
     res.status(200).json({
       success: true,
@@ -249,16 +220,20 @@ exports.getStudentsByClass = async (req, res) => {
   }
 };
 
-// Get Students by Section
+
+//Get Student By sectionId
+
 exports.getStudentsBySection = async (req, res) => {
   try {
-    const section = await Section.findById(req.params.sectionId);
+
+    const section=await Section.findById(req.params.sectionId);
     
-    if (!section) {
+    if(!section){
       return res.status(404).json({
-        success: false,
-        message: "Section not found"
+        success:false,
+        message:"Section not found"
       });
+
     }
 
     const students = await Student.find({
@@ -280,56 +255,48 @@ exports.getStudentsBySection = async (req, res) => {
   }
 };
 
-// Update Student
+
+
+
+
 exports.updateStudent = async (req, res) => {
   const { fullName, parentName, motherName, parentMobile } = req.body;
 
-  const session = await mongoose.startSession();
-  session.startTransaction();
-
   try {
-    const student = await Student.findById(req.params.id).session(session);
+    const user=await User.findOne({linkedId:req.params.id});
     
+    if(!user){
+      return res.status(404).json({
+        success:false,
+        message:"User not found"
+      });
+    }
+
+    const student = await Student.findById(req.params.id);
+    
+
     if (!student) {
-      await session.abortTransaction();
-      session.endSession();
       return res.status(404).json({
         success: false,
         message: 'Student not found'
       });
     }
 
-    const user = await User.findOne({ linkedId: req.params.id }).session(session);
     
-    if (!user) {
-      await session.abortTransaction();
-      session.endSession();
-      return res.status(404).json({
-        success: false,
-        message: "User not found"
-      });
-    }
 
-    // Update student fields
     student.fullName = fullName || student.fullName;
     student.parentName = parentName || student.parentName;
     student.motherName = motherName || student.motherName;
     student.parentMobile = parentMobile || student.parentMobile;
 
-    await student.save({ session });
 
-    // Update user name
-    user.name = fullName || user.name;
-    
-    // Only update password if parentMobile changed
-    if (parentMobile && parentMobile !== student.parentMobile) {
-      user.password = parentMobile;
-    }
-    
-    await user.save({ session });
+    await student.save();
 
-    await session.commitTransaction();
-    session.endSession();
+
+    user.password=parentMobile ||student.parentMobile;
+    
+    await user.save();
+    
 
     res.status(200).json({
       success: true,
@@ -338,8 +305,6 @@ exports.updateStudent = async (req, res) => {
     });
 
   } catch (err) {
-    await session.abortTransaction();
-    session.endSession();
     console.error(err);
     res.status(500).json({
       success: false,
@@ -348,7 +313,7 @@ exports.updateStudent = async (req, res) => {
   }
 };
 
-// Delete Student
+
 exports.deleteStudent = async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
@@ -357,21 +322,16 @@ exports.deleteStudent = async (req, res) => {
     const student = await Student.findById(req.params.id).session(session);
     if (!student) {
       await session.abortTransaction();
-      session.endSession();
       return res.status(404).json({
         success: false,
         message: 'Student not found'
       });
     }
 
-    // Delete associated user
     await User.findByIdAndDelete(student.user).session(session);
-    
-    // Delete student
     await student.deleteOne({ session });
 
     await session.commitTransaction();
-    session.endSession();
 
     res.status(200).json({
       success: true,
@@ -380,11 +340,12 @@ exports.deleteStudent = async (req, res) => {
 
   } catch (err) {
     await session.abortTransaction();
-    session.endSession();
     console.error(err);
     res.status(500).json({
       success: false,
       message: 'Failed to delete student'
     });
+  } finally {
+    session.endSession();
   }
 };
