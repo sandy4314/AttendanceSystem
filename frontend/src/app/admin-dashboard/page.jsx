@@ -1,22 +1,11 @@
 'use client';
 
-import ProtectedRoute from '../../components/ProtectedRoute';
+import AdminLayout from '../../components/AdminLayout';
 import { useState, useEffect } from 'react';
 import { apiRequest } from '../../services/api';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import {
-  LayoutDashboard,
-  Building,
-  BookOpen,
-  Layers,
-  Users,
-  GraduationCap,
-  Grid,
-  LogOut,
-  RefreshCw,
-  BookMarked // Added missing import
-} from 'lucide-react';
+import {Building,BookOpen,Layers,Users,GraduationCap,Grid,RefreshCw} from 'lucide-react';
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -56,7 +45,6 @@ export default function AdminDashboard() {
       // Process Branches
       if (branchesRes.status === 'fulfilled' && branchesRes.value) {
         const branchesData = branchesRes.value;
-        // Handle different response structures
         let branches = [];
         if (branchesData.success && Array.isArray(branchesData.data)) {
           branches = branchesData.data;
@@ -69,8 +57,6 @@ export default function AdminDashboard() {
           ...prev,
           totalBranches: branches.length
         }));
-      } else {
-        console.error('Branches fetch failed:', branchesRes.reason);
       }
 
       // Process Teachers
@@ -141,19 +127,14 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.clear();
-    router.push('/');
-  };
-
   const handleRefresh = () => {
     fetchDashboardData();
   };
 
   if (loading) {
     return (
-      <ProtectedRoute>
-        <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <AdminLayout>
+        <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
             <div className="flex items-center justify-center space-x-2 mb-4">
               <div className="w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
@@ -162,202 +143,133 @@ export default function AdminDashboard() {
             <p className="text-sm text-gray-500">Fetching your data</p>
           </div>
         </div>
-      </ProtectedRoute>
+      </AdminLayout>
     );
   }
 
   return (
-    <ProtectedRoute>
-      <div className="flex min-h-screen bg-gray-100">
+    <AdminLayout>
+      {/* HEADER with Refresh Button */}
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h2 className="text-3xl font-bold text-gray-900">Dashboard</h2>
+          <p className="text-gray-700">Welcome back, Admin!</p>
+        </div>
+        <button
+          onClick={handleRefresh}
+          className="flex items-center gap-2 px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition"
+        >
+          <RefreshCw size={18} /> Refresh
+        </button>
+      </div>
 
-        {/* SIDEBAR */}
-        <div className="w-64 bg-[#0f172a] text-white flex flex-col justify-between">
-          <div>
-            <div className="p-6">
-              <h1 className="text-xl font-bold">SL</h1>
-              <p className="text-sm text-gray-400">Admin Portal</p>
+      {/* Error Message */}
+      {error && (
+        <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+          {error}
+        </div>
+      )}
+
+      {/* STATS GRID */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <StatCard
+          title="Total Branches"
+          value={stats.totalBranches}
+          color="border-amber-500"
+          icon={<Building className="text-amber-500" size={24} />}
+        />
+        <StatCard
+          title="Total Classes"
+          value={stats.totalClasses}
+          color="border-blue-500"
+          icon={<BookOpen className="text-blue-500" size={24} />}
+        />
+        <StatCard
+          title="Total Sections"
+          value={stats.totalSections}
+          color="border-green-500"
+          icon={<Layers className="text-green-500" size={24} />}
+        />
+        <StatCard
+          title="Total Students"
+          value={stats.totalStudents}
+          color="border-purple-500"
+          icon={<GraduationCap className="text-purple-500" size={24} />}
+        />
+        <StatCard
+          title="Total Teachers"
+          value={stats.totalTeachers}
+          color="border-orange-500"
+          icon={<Users className="text-orange-500" size={24} />}
+        />
+        <StatCard
+          title="Active Sessions"
+          value={stats.activeSessions}
+          color="border-red-500"
+          icon={<Users className="text-red-500" size={24} />}
+        />
+      </div>
+
+      {/* RECENT ACTIVITY SECTION */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Recent Branches */}
+        <div className="bg-white rounded-xl shadow p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Branches</h3>
+          {recentBranches.length > 0 ? (
+            <div className="space-y-3">
+              {recentBranches.map((branch, idx) => (
+                <div key={branch._id || idx} className="flex items-center justify-between border-b pb-2 last:border-0">
+                  <div>
+                    <p className="font-medium text-gray-900">{branch.branchName}</p>
+                    <p className="text-sm text-gray-500">{branch.schoolName || 'N/A'}</p>
+                  </div>
+                  <span className={`text-xs px-2 py-1 rounded-full ${branch.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
+                    }`}>
+                    {branch.status || 'active'}
+                  </span>
+                </div>
+              ))}
             </div>
-
-            <nav className="space-y-2 px-4">
-              <Link href="/admin-dashboard">
-                <SidebarItem icon={<LayoutDashboard />} label="Dashboard" active={true} />
-              </Link>
-              <Link href="/admin-dashboard/branches">
-                <SidebarItem icon={<Building />} label="Branches" />
-              </Link>
-              <Link href="/admin-dashboard/classes">
-                <SidebarItem icon={<Layers />} label="Classes" />
-              </Link>
-              <Link href="/admin-dashboard/sections">
-                <SidebarItem icon={<Grid />} label="Sections" />
-              </Link>
-              <Link href="/admin-dashboard/students">
-                <SidebarItem icon={<GraduationCap />} label="Students" />
-              </Link>
-              <Link href="/admin-dashboard/teachers">
-                <SidebarItem icon={<Users />} label="Teachers" />
-              </Link>
-              <Link href="/admin-dashboard/subjects">
-                <SidebarItem icon={<BookOpen />} label="Subjects" />
-              </Link>
-              <Link href="/admin-dashboard/assignsubject">
-                <SidebarItem icon={<BookMarked />} label="Assign Subject" />
-              </Link>
-            </nav>
-          </div>
-
-          <div className="p-4">
-            <button
-              onClick={handleLogout}
-              className="flex items-center gap-2 w-full px-4 py-2 bg-red-500 rounded-lg hover:bg-red-600 transition"
-            >
-              <LogOut size={18} /> Logout
-            </button>
-          </div>
+          ) : (
+            <p className="text-gray-500 text-center py-4">No branches found</p>
+          )}
+          <Link
+            href="/admin-dashboard/branches"
+            className="mt-4 inline-flex items-center text-amber-500 hover:text-amber-600"
+          >
+            View All ({stats.totalBranches}) →
+          </Link>
         </div>
 
-        {/* MAIN CONTENT */}
-        <div className="flex-1 p-8 overflow-auto">
-
-          {/* HEADER with Refresh Button */}
-          <div className="flex justify-between items-center mb-6">
-            <div>
-              <h2 className="text-3xl font-bold text-gray-900">Dashboard</h2>
-              <p className="text-gray-700">Welcome back, Admin!</p>
+        {/* Recent Teachers */}
+        <div className="bg-white rounded-xl shadow p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Teachers</h3>
+          {recentTeachers.length > 0 ? (
+            <div className="space-y-3">
+              {recentTeachers.map((teacher, idx) => (
+                <div key={teacher._id || idx} className="flex items-center justify-between border-b pb-2 last:border-0">
+                  <div>
+                    <p className="font-medium text-gray-900">{teacher.fullName || teacher.name}</p>
+                    <p className="text-sm text-gray-500">{teacher.phone || teacher.email || 'No contact'}</p>
+                  </div>
+                  <span className="text-xs text-gray-500">
+                    {teacher.salary ? `₹${teacher.salary.toLocaleString()}` : 'N/A'}
+                  </span>
+                </div>
+              ))}
             </div>
-            <button
-              onClick={handleRefresh}
-              className="flex items-center gap-2 px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition"
-            >
-              <RefreshCw size={18} /> Refresh
-            </button>
-          </div>
-
-          {/* Error Message */}
-          {error && (
-            <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-              {error}
-            </div>
+          ) : (
+            <p className="text-gray-500 text-center py-4">No teachers found</p>
           )}
-
-          {/* STATS GRID */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            <StatCard
-              title="Total Branches"
-              value={stats.totalBranches}
-              color="border-amber-500"
-              icon={<Building className="text-amber-500" size={24} />}
-            />
-            <StatCard
-              title="Total Classes"
-              value={stats.totalClasses}
-              color="border-blue-500"
-              icon={<BookOpen className="text-blue-500" size={24} />}
-            />
-            <StatCard
-              title="Total Sections"
-              value={stats.totalSections}
-              color="border-green-500"
-              icon={<Layers className="text-green-500" size={24} />}
-            />
-            <StatCard
-              title="Total Students"
-              value={stats.totalStudents}
-              color="border-purple-500"
-              icon={<GraduationCap className="text-purple-500" size={24} />}
-            />
-            <StatCard
-              title="Total Teachers"
-              value={stats.totalTeachers}
-              color="border-orange-500"
-              icon={<Users className="text-orange-500" size={24} />}
-            />
-            <StatCard
-              title="Active Sessions"
-              value={stats.activeSessions}
-              color="border-red-500"
-              icon={<Users className="text-red-500" size={24} />}
-            />
-          </div>
-
-          {/* RECENT ACTIVITY SECTION */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Recent Branches */}
-            <div className="bg-white rounded-xl shadow p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Branches</h3>
-              {recentBranches.length > 0 ? (
-                <div className="space-y-3">
-                  {recentBranches.map((branch, idx) => (
-                    <div key={branch._id || idx} className="flex items-center justify-between border-b pb-2 last:border-0">
-                      <div>
-                        <p className="font-medium text-gray-900">{branch.branchName}</p>
-                        <p className="text-sm text-gray-500">{branch.schoolName || 'N/A'}</p>
-                      </div>
-                      <span className={`text-xs px-2 py-1 rounded-full ${branch.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
-                        }`}>
-                        {branch.status || 'active'}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-gray-500 text-center py-4">No branches found</p>
-              )}
-              <Link
-                href="/admin-dashboard/branches"
-                className="mt-4 inline-flex items-center text-amber-500 hover:text-amber-600"
-              >
-                View All ({stats.totalBranches}) →
-              </Link>
-            </div>
-
-            {/* Recent Teachers */}
-            <div className="bg-white rounded-xl shadow p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Teachers</h3>
-              {recentTeachers.length > 0 ? (
-                <div className="space-y-3">
-                  {recentTeachers.map((teacher, idx) => (
-                    <div key={teacher._id || idx} className="flex items-center justify-between border-b pb-2 last:border-0">
-                      <div>
-                        <p className="font-medium text-gray-900">{teacher.fullName || teacher.name}</p>
-                        <p className="text-sm text-gray-500">{teacher.phone || teacher.email || 'No contact'}</p>
-                      </div>
-                      <span className="text-xs text-gray-500">
-                        {teacher.salary ? `₹${teacher.salary.toLocaleString()}` : 'N/A'}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-gray-500 text-center py-4">No teachers found</p>
-              )}
-              <Link
-                href="/admin-dashboard/teachers"
-                className="mt-4 inline-flex items-center text-amber-500 hover:text-amber-600"
-              >
-                View All ({stats.totalTeachers}) →
-              </Link>
-            </div>
-          </div>
+          <Link
+            href="/admin-dashboard/teachers"
+            className="mt-4 inline-flex items-center text-amber-500 hover:text-amber-600"
+          >
+            View All ({stats.totalTeachers}) →
+          </Link>
         </div>
       </div>
-    </ProtectedRoute>
-  );
-}
-
-/* Sidebar Item Component */
-function SidebarItem({ icon, label, active }) {
-  return (
-    <div
-      className={`flex items-center gap-3 px-4 py-2 rounded-lg cursor-pointer transition ${
-        active
-          ? 'bg-amber-500 text-white'
-          : 'hover:bg-gray-700 text-gray-300'
-      }`}
-    >
-      {icon}
-      {label}
-    </div>
+    </AdminLayout>
   );
 }
 

@@ -1,34 +1,11 @@
 'use client';
 
-import ProtectedRoute from '../../../components/ProtectedRoute';
+import AdminLayout from '../../../components/AdminLayout';
 import { useState, useEffect } from 'react';
 import { apiRequest } from '../../../services/api';
-import { useRouter } from 'next/navigation';
-import {
-  Plus,
-  Edit,
-  Trash2,
-  Search,
-  X,
-  LogOut,
-  LayoutDashboard,
-  Building,
-  BookOpen,
-  Layers,
-  Users,
-  GraduationCap,
-  AlertCircle,
-  Eye,
-  Grid,
-  BookMarked,
-  Hash,
-  RefreshCw,
-  Server
-} from 'lucide-react';
-import Link from 'next/link';
+import {Plus,Edit,Trash2,Search,X,BookOpen,AlertCircle,Eye,BookMarked,Hash,RefreshCw,Server} from 'lucide-react';
 
 export default function SubjectsPage() {
-  const router = useRouter();
   const [subjects, setSubjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -39,7 +16,6 @@ export default function SubjectsPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
-  const [retryCount, setRetryCount] = useState(0);
   const [serverStatus, setServerStatus] = useState('checking'); // 'checking', 'online', 'offline'
   
   // Form state
@@ -56,7 +32,7 @@ export default function SubjectsPage() {
     if (serverStatus === 'online') {
       fetchSubjects();
     }
-  }, [retryCount, serverStatus]);
+  }, [serverStatus]); 
 
   const checkServerStatus = async () => {
     try {
@@ -89,7 +65,6 @@ export default function SubjectsPage() {
       setLoading(true);
       setError('');
       console.log('Fetching subjects from API...');
-      
       const response = await apiRequest('/subjects');
       console.log('Subjects API response:', response);
       
@@ -106,7 +81,6 @@ export default function SubjectsPage() {
       }
     } catch (error) {
       console.error('Error fetching subjects:', error);
-      
       if (error.message.includes('404')) {
         setError('Subjects API endpoint not found. Please check if subject routes are properly configured in the backend.');
       } else if (error.message.includes('connect to server')) {
@@ -122,7 +96,6 @@ export default function SubjectsPage() {
       } else {
         setError(error.message || 'Failed to load subjects. Please try again.');
       }
-      
       setSubjects([]);
     } finally {
       setLoading(false);
@@ -131,12 +104,6 @@ export default function SubjectsPage() {
 
   const handleRetry = () => {
     checkServerStatus();
-    setRetryCount(prev => prev + 1);
-  };
-
-  const handleLogout = () => {
-    localStorage.clear();
-    router.push('/');
   };
 
   const handleInputChange = (e) => {
@@ -183,25 +150,20 @@ export default function SubjectsPage() {
     
     try {
       let response;
-      
       if (editingSubject) {
         // Update subject
         const updateData = {};
-        
         if (formData.subjectName && formData.subjectName.trim() !== editingSubject.subjectName) {
           updateData.subjectName = formData.subjectName.trim();
         }
-        
         if (formData.subjectCode !== editingSubject.subjectCode) {
           updateData.subjectCode = formData.subjectCode.trim() || '';
         }
-        
         if (Object.keys(updateData).length === 0) {
           setError('No changes to save');
           setSubmitting(false);
           return;
         }
-        
         console.log('Updating subject with data:', updateData);
         response = await apiRequest(`/subjects/${editingSubject._id}`, {
           method: 'PUT',
@@ -213,30 +175,25 @@ export default function SubjectsPage() {
           setError('Subject name is required');
           setSubmitting(false);
           return;
-        }
-        
+        } 
         const createData = {
           subjectName: formData.subjectName.trim()
-        };
-        
+        };     
         if (formData.subjectCode && formData.subjectCode.trim()) {
           createData.subjectCode = formData.subjectCode.trim();
-        }
-        
+        }      
         console.log('Creating subject with data:', createData);
         response = await apiRequest('/subjects', {
           method: 'POST',
           body: JSON.stringify(createData)
         });
       }
-      
       console.log('Save response:', response);
       
       // Check for success
       if (response?.data || response?._id || response?.success === true) {
         setSuccessMessage(editingSubject ? 'Subject updated successfully!' : 'Subject created successfully!');
         await fetchSubjects();
-        
         setTimeout(() => {
           setShowModal(false);
           setSuccessMessage('');
@@ -246,7 +203,6 @@ export default function SubjectsPage() {
       }
     } catch (error) {
       console.error('Error saving subject:', error);
-      
       if (error.message.includes('404')) {
         setError('API endpoint not found. Please check if the backend routes are properly configured.');
       } else if (error.message.includes('already exists')) {
@@ -264,14 +220,12 @@ export default function SubjectsPage() {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Are you sure you want to delete this subject? This action cannot be undone and may affect teacher assignments.')) return;
-    
+    if (!confirm('Are you sure you want to delete this subject? This action cannot be undone and may affect teacher assignments.')) return; 
     try {
       setError('');
       const response = await apiRequest(`/subjects/${id}`, {
         method: 'DELETE'
       });
-      
       if (response && (response.success === true || response.message)) {
         setSuccessMessage('Subject deleted successfully!');
         await fetchSubjects();
@@ -296,12 +250,11 @@ export default function SubjectsPage() {
     }
     return true;
   });
-
   // Loading state with server status
   if (loading || serverStatus === 'checking') {
     return (
-      <ProtectedRoute>
-        <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <AdminLayout>
+        <div className="min-h-screen flex items-center justify-center">
           <div className="text-center max-w-md p-6 bg-white rounded-lg shadow">
             <div className="flex items-center justify-center space-x-2 mb-4">
               <div className="w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
@@ -311,55 +264,49 @@ export default function SubjectsPage() {
             </div>
           </div>
         </div>
-      </ProtectedRoute>
+      </AdminLayout>
     );
   }
-
   // Server offline state
   if (serverStatus === 'offline') {
     return (
-      <ProtectedRoute>
-        <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <AdminLayout>
+        <div className="min-h-screen flex items-center justify-center">
           <div className="text-center max-w-2xl p-8 bg-white rounded-lg shadow">
             <Server className="w-16 h-16 text-red-500 mx-auto mb-4" />
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Server Connection Error</h2>
             <p className="text-gray-600 mb-6">
               Cannot connect to the backend server. Please make sure:
             </p>
-            
             <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-left mb-6">
               <ol className="list-decimal list-inside space-y-2 text-red-700">
                 <li>Your backend server is running on <code className="bg-red-100 px-2 py-0.5 rounded">http://localhost:5000</code></li>
                 <li>Run this command in your backend directory:</li>
               </ol>
               <pre className="bg-red-100 p-3 rounded text-xs mt-2 overflow-x-auto">
-                cd D:\AttendanceManagementSystem\backend
+                cd D:\AttendanceSystem\backend
                 node server.js
               </pre>
             </div>
-
             <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-left mb-6">
               <p className="font-medium text-amber-800 mb-2">🔧 Backend Configuration Check:</p>
               <p className="text-amber-700 text-sm mb-2">1. Verify subjectRoutes.js exists:</p>
               <pre className="bg-amber-100 p-2 rounded text-xs mb-2">
-                D:\AttendanceManagementSystem\backend\routes\subjectRoutes.js
-              </pre>
-              
+                D:\AttendanceSystem\backend\routes\subjectRoutes.js
+              </pre>             
               <p className="text-amber-700 text-sm mb-2">2. Check server.js has this line:</p>
               <pre className="bg-amber-100 p-2 rounded text-xs">
                 const subjectRoutes = require('./routes/subjectRoutes');
                 app.use('/api/subjects', subjectRoutes);
               </pre>
-            </div>
-            
+            </div>           
             <div className="flex gap-2 justify-center">
               <button
                 onClick={handleRetry}
                 className="flex items-center gap-2 px-6 py-3 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition"
               >
                 <RefreshCw size={18} /> Retry Connection
-              </button>
-              
+              </button>    
               <button
                 onClick={() => window.location.reload()}
                 className="px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition"
@@ -369,198 +316,141 @@ export default function SubjectsPage() {
             </div>
           </div>
         </div>
-      </ProtectedRoute>
+      </AdminLayout>
     );
   }
-
   return (
-    <ProtectedRoute>
-      <div className="flex min-h-screen bg-gray-100">
-        {/* SIDEBAR */}
-        <div className="w-64 bg-[#0f172a] text-white flex flex-col justify-between">
-          <div>
-            <div className="p-6">
-              <h1 className="text-xl font-bold">SL</h1>
-              <p className="text-sm text-gray-400">Admin Portal</p>
-            </div>
-
-            <nav className="space-y-2 px-4">
-              <Link href="/admin-dashboard">
-                <SidebarItem icon={<LayoutDashboard />} label="Dashboard" />
-              </Link>
-              <Link href="/admin-dashboard/branches">
-                <SidebarItem icon={<Building />} label="Branches" />
-              </Link>
-              <Link href="/admin-dashboard/classes">
-                <SidebarItem icon={<Layers />} label="Classes" />
-              </Link>
-              <Link href="/admin-dashboard/sections">
-                <SidebarItem icon={<Grid />} label="Sections" />
-              </Link>
-              <Link href="/admin-dashboard/students">
-                <SidebarItem icon={<GraduationCap />} label="Students" />
-              </Link>
-              <Link href="/admin-dashboard/teachers">
-                <SidebarItem icon={<Users />} label="Teachers" />
-              </Link>
-              <Link href="/admin-dashboard/subjects">
-                <SidebarItem icon={<BookOpen />} label="Subjects" active={true} />
-              </Link>
-              <Link href="/admin-dashboard/assignsubject">
-                <SidebarItem icon={<BookMarked />} label="Assign Subject" />
-              </Link>
-            </nav>
+    <AdminLayout>
+      {/* HEADER */}
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <h2 className="text-3xl font-bold text-gray-900">Subjects</h2>
           </div>
-
-          <div className="p-4">
-            <button
-              onClick={handleLogout}
-              className="flex items-center gap-2 w-full px-4 py-2 bg-red-500 rounded-lg hover:bg-red-600 transition"
-            >
-              <LogOut size={18} /> Logout
+          <p className="text-gray-700">Manage academic subjects</p>
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={handleRetry}
+            className="flex items-center gap-2 bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition"
+            title="Refresh"
+          >
+            <RefreshCw size={18} />
+          </button>
+          <button
+            onClick={openCreateModal}
+            className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg transition"
+          >
+            <Plus size={18} /> Add Subject
+          </button>
+        </div>
+      </div>
+      {/* Error Message */}
+      {error && (
+        <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+          <div className="flex items-start gap-2">
+            <AlertCircle size={20} className="shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="font-medium">Error</p>
+              <p className="text-sm">{error}</p>
+            </div>
+            <button onClick={() => setError('')} className="text-red-500 hover:text-red-700">
+              <X size={18} />
             </button>
           </div>
         </div>
-
-        {/* MAIN CONTENT */}
-        <div className="flex-1 p-8 overflow-auto">
-          {/* HEADER */}
-          <div className="flex justify-between items-center mb-6">
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <h2 className="text-3xl font-bold text-gray-900">Subjects</h2>
-              </div>
-              <p className="text-gray-700">Manage academic subjects</p>
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={handleRetry}
-                className="flex items-center gap-2 bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition"
-                title="Refresh"
-              >
-                <RefreshCw size={18} />
-              </button>
-              <button
-                onClick={openCreateModal}
-                className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg transition"
-              >
-                <Plus size={18} /> Add Subject
-              </button>
-            </div>
-          </div>
-
-          {/* Error Message */}
-          {error && (
-            <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-              <div className="flex items-start gap-2">
-                <AlertCircle size={20} className="flex-shrink-0 mt-0.5" />
-                <div className="flex-1">
-                  <p className="font-medium">Error</p>
-                  <p className="text-sm">{error}</p>
-                </div>
-                <button onClick={() => setError('')} className="text-red-500 hover:text-red-700">
-                  <X size={18} />
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Success Message */}
-          {successMessage && (
-            <div className="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg flex items-center gap-2">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-              <span>{successMessage}</span>
-            </div>
-          )}
-
-          {/* SEARCH BAR */}
-          <div className="mb-6 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-            <input
-              type="text"
-              placeholder="Search by subject name or code..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-400 text-black rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none"
-            />
-          </div>
-
-          {/* SUBJECTS TABLE - Updated with "Created" column removed */}
-          <div className="bg-white rounded-xl shadow overflow-hidden">
-            <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subject Name</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subject Code</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {filteredSubjects.length > 0 ? (
-                  filteredSubjects.map((subject, index) => (
-                    <tr key={subject._id || index} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 text-sm text-gray-900">{index + 1}</td>
-                      <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                        <div className="flex items-center gap-2">
-                          <BookMarked size={16} className="text-amber-500" />
-                          {subject.subjectName}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-900">
-                        {subject.subjectCode ? (
-                          <div className="flex items-center gap-1">
-                            <Hash size={14} className="text-gray-500" />
-                            {subject.subjectCode}
-                          </div>
-                        ) : (
-                          <span className="text-gray-400">—</span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 text-sm">
-                        <div className="flex space-x-2">
-                          <button
-                            onClick={() => openDetailsModal(subject)}
-                            className="p-1 text-blue-600 hover:bg-blue-100 rounded transition"
-                            title="View Details"
-                          >
-                            <Eye size={18} />
-                          </button>
-                          <button
-                            onClick={() => openEditModal(subject)}
-                            className="p-1 text-blue-600 hover:bg-blue-100 rounded transition"
-                            title="Edit"
-                          >
-                            <Edit size={18} />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(subject._id)}
-                            className="p-1 text-red-600 hover:bg-red-100 rounded transition"
-                            title="Delete"
-                          >
-                            <Trash2 size={18} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="4" className="px-6 py-8 text-center text-gray-500">
-                      {searchTerm 
-                        ? 'No subjects match your search criteria.'
-                        : 'No subjects found. Click "Add Subject" to create one.'}
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+      )}
+      {/* Success Message */}
+      {successMessage && (
+        <div className="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg flex items-center gap-2">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+          <span>{successMessage}</span>
         </div>
+      )}
+      {/* SEARCH BAR */}
+      <div className="mb-6 relative">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+        <input
+          type="text"
+          placeholder="Search by subject name or code..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full pl-10 pr-4 py-2 border border-gray-300 text-black rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none"
+        />
       </div>
-
+      {/* SUBJECTS TABLE */}
+      <div className="bg-white rounded-xl shadow overflow-hidden">
+        <table className="w-full">
+          <thead className="bg-gray-50 border-b border-gray-200">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subject Name</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subject Code</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200">
+            {filteredSubjects.length > 0 ? (
+              filteredSubjects.map((subject, index) => (
+                <tr key={subject._id || index} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 text-sm text-gray-900">{index + 1}</td>
+                  <td className="px-6 py-4 text-sm font-medium text-gray-900">
+                    <div className="flex items-center gap-2">
+                      <BookMarked size={16} className="text-amber-500" />
+                      {subject.subjectName}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-900">
+                    {subject.subjectCode ? (
+                      <div className="flex items-center gap-1">
+                        <Hash size={14} className="text-gray-500" />
+                        {subject.subjectCode}
+                      </div>
+                    ) : (
+                      <span className="text-gray-400">—</span>
+                    )}
+                  </td>
+                  <td className="px-6 py-4 text-sm">
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => openDetailsModal(subject)}
+                        className="p-1 text-blue-600 hover:bg-blue-100 rounded transition"
+                        title="View Details"
+                      >
+                        <Eye size={18} />
+                      </button>
+                      <button
+                        onClick={() => openEditModal(subject)}
+                        className="p-1 text-blue-600 hover:bg-blue-100 rounded transition"
+                        title="Edit"
+                      >
+                        <Edit size={18} />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(subject._id)}
+                        className="p-1 text-red-600 hover:bg-red-100 rounded transition"
+                        title="Delete"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="4" className="px-6 py-8 text-center text-gray-500">
+                  {searchTerm 
+                    ? 'No subjects match your search criteria.'
+                    : 'No subjects found. Click "Add Subject" to create one.'}
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
       {/* CREATE/EDIT MODAL */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 overflow-y-auto">
@@ -577,7 +467,6 @@ export default function SubjectsPage() {
                 <X size={20} />
               </button>
             </div>
-
             {/* Modal Error Message */}
             {error && (
               <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg text-sm flex items-center gap-2">
@@ -585,7 +474,6 @@ export default function SubjectsPage() {
                 <span>{error}</span>
               </div>
             )}
-
             {/* Modal Success Message */}
             {successMessage && (
               <div className="mb-4 bg-green-50 border border-green-200 text-green-700 px-3 py-2 rounded-lg text-sm flex items-center gap-2">
@@ -595,7 +483,6 @@ export default function SubjectsPage() {
                 <span>{successMessage}</span>
               </div>
             )}
-
             <form onSubmit={handleSubmit}>
               <div className="space-y-4">
                 <div>
@@ -609,14 +496,13 @@ export default function SubjectsPage() {
                     onChange={handleInputChange}
                     required
                     disabled={submitting}
-                    className="w-full px-3 py-2 border border-gray-400 text-black rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none disabled:bg-gray-100"
+                    className="w-full px-3 py-2 border border-gray-300 text-black rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none disabled:bg-gray-100"
                     placeholder="e.g., Mathematics, Science, English"
                   />
                   <p className="text-xs text-gray-500 mt-1">
                     Subject name must be unique
                   </p>
                 </div>
-
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Subject Code (Optional)
@@ -627,11 +513,10 @@ export default function SubjectsPage() {
                     value={formData.subjectCode}
                     onChange={handleInputChange}
                     disabled={submitting}
-                    className="w-full px-3 py-2 border border-gray-400 text-black rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none disabled:bg-gray-100"
+                    className="w-full px-3 py-2 border border-gray-300 text-black rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none disabled:bg-gray-100"
                     placeholder="e.g., MATH101, SCI202, ENG103"
                   />
                 </div>
-
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-700">
                   <p className="flex items-center gap-2">
                     <AlertCircle size={16} />
@@ -639,7 +524,6 @@ export default function SubjectsPage() {
                   </p>
                 </div>
               </div>
-
               <div className="flex justify-end space-x-3 mt-6">
                 <button
                   type="button"
@@ -664,7 +548,6 @@ export default function SubjectsPage() {
           </div>
         </div>
       )}
-
       {/* SUBJECT DETAILS MODAL */}
       {showDetailsModal && selectedSubject && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -678,7 +561,6 @@ export default function SubjectsPage() {
                 <X size={20} />
               </button>
             </div>
-
             <div className="space-y-4">
               <div className="bg-gray-50 p-4 rounded-lg">
                 <h4 className="font-semibold text-gray-700 mb-3">Information</h4>
@@ -689,8 +571,7 @@ export default function SubjectsPage() {
                       <BookMarked size={16} className="text-amber-500" />
                       <p className="font-medium">{selectedSubject.subjectName}</p>
                     </div>
-                  </div>
-                  
+                  </div>                 
                   {selectedSubject.subjectCode && (
                     <div>
                       <p className="text-sm text-gray-500">Subject Code</p>
@@ -699,18 +580,15 @@ export default function SubjectsPage() {
                         <p className="font-mono">{selectedSubject.subjectCode}</p>
                       </div>
                     </div>
-                  )}
-                  
+                  )} 
                   <div>
                     <p className="text-sm text-gray-500">Subject ID</p>
                     <p className="font-mono text-sm">{selectedSubject._id}</p>
-                  </div>
-                  
+                  </div>            
                   <div>
                     <p className="text-sm text-gray-500">Created At</p>
                     <p>{selectedSubject.createdAt ? new Date(selectedSubject.createdAt).toLocaleString() : 'N/A'}</p>
-                  </div>
-                  
+                  </div>                  
                   <div>
                     <p className="text-sm text-gray-500">Last Updated</p>
                     <p>{selectedSubject.updatedAt ? new Date(selectedSubject.updatedAt).toLocaleString() : 'N/A'}</p>
@@ -718,7 +596,6 @@ export default function SubjectsPage() {
                 </div>
               </div>
             </div>
-
             <div className="flex justify-end mt-6">
               <button
                 onClick={() => setShowDetailsModal(false)}
@@ -730,21 +607,6 @@ export default function SubjectsPage() {
           </div>
         </div>
       )}
-    </ProtectedRoute>
-  );
-}
-
-function SidebarItem({ icon, label, active }) {
-  return (
-    <div
-      className={`flex items-center gap-3 px-4 py-2 rounded-lg cursor-pointer transition ${
-        active
-          ? 'bg-amber-500 text-white'
-          : 'hover:bg-gray-700 text-gray-300'
-      }`}
-    >
-      {icon}
-      {label}
-    </div>
+    </AdminLayout>
   );
 }

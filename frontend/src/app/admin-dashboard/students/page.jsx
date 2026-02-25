@@ -1,42 +1,11 @@
 'use client';
 
-import ProtectedRoute from '../../../components/ProtectedRoute';
+import AdminLayout from '../../../components/AdminLayout';
 import { useState, useEffect } from 'react';
 import { apiRequest } from '../../../services/api';
-import { useRouter } from 'next/navigation';
-import {
-  Building,
-  Plus,
-  Edit,
-  Trash2,
-  Search,
-  X,
-  LogOut,
-  LayoutDashboard,
-  BookOpen,
-  BookMarked,
-  Layers,
-  Users,
-  GraduationCap,
-  AlertCircle,
-  Eye,
-  Phone,
-  UserCircle,
-  Grid,
-  ChevronDown,
-  RefreshCw,
-  Copy,
-  CheckCircle,
-  User,
-  Lock,
-  Key,
-  Hash,
-  Mail
-} from 'lucide-react';
-import Link from 'next/link';
+import {Building,Plus,Edit,Trash2,Search,X,BookOpen,AlertCircle,Eye,Phone,UserCircle,ChevronDown,RefreshCw,Copy,CheckCircle,User,Lock,Key} from 'lucide-react';
 
 export default function StudentsPage() {
-  const router = useRouter();
   const [students, setStudents] = useState([]);
   const [allStudents, setAllStudents] = useState([]);
   const [branches, setBranches] = useState([]);
@@ -64,7 +33,7 @@ export default function StudentsPage() {
   const [filteredClasses, setFilteredClasses] = useState([]);
   const [filteredSections, setFilteredSections] = useState([]);
 
-  // Form state for create/edit modal
+  // Form state for create/edit modal - MATCHING BACKEND SCHEMA
   const [formData, setFormData] = useState({
     fullName: '',
     rollNo: '',
@@ -73,9 +42,7 @@ export default function StudentsPage() {
     parentMobile: '',
     branch: '',
     classRef: '',
-    section: '',
-    username: '',
-    password: ''
+    section: ''
   });
 
   // State for form dropdowns
@@ -137,7 +104,6 @@ export default function StudentsPage() {
       applyFilters();
     }
   }, [selectedBranch, selectedClass, selectedSection, allStudents]);
-
   const fetchAllStudents = async () => {
     try {
       const response = await apiRequest('/students');
@@ -156,7 +122,6 @@ export default function StudentsPage() {
 
   const applyFilters = () => {
     let filtered = [...allStudents];
-
     if (selectedBranch !== 'all') {
       filtered = filtered.filter(student => {
         const branchId = student.branch?._id || student.branch;
@@ -177,7 +142,6 @@ export default function StudentsPage() {
         return sectionId === selectedSection;
       });
     }
-
     setStudents(filtered);
   };
 
@@ -240,57 +204,13 @@ export default function StudentsPage() {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.clear();
-    router.push('/');
-  };
-
-  const generateUsername = (fullName, rollNo) => {
-    // Generate username from name and roll number
-    const namePart = fullName.toLowerCase().replace(/\s+/g, '').substring(0, 8);
-    return `${namePart}_${rollNo}`;
-  };
-
-  const generatePassword = () => {
-    // Generate a random password
-    const length = 8;
-    const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    let password = "";
-    for (let i = 0; i < length; i++) {
-      password += charset.charAt(Math.floor(Math.random() * charset.length));
-    }
-    return password;
-  };
-
   const handleInputChange = async (e) => {
     const { name, value } = e.target;
-
-    if (name === 'fullName' || name === 'rollNo') {
-      // Auto-generate username when name or roll number changes
-      const newFullName = name === 'fullName' ? value : formData.fullName;
-      const newRollNo = name === 'rollNo' ? value : formData.rollNo;
-
-      if (newFullName && newRollNo) {
-        const generatedUsername = generateUsername(newFullName, newRollNo);
-        setFormData(prev => ({
-          ...prev,
-          [name]: value,
-          username: generatedUsername
-        }));
-      } else {
-        setFormData(prev => ({
-          ...prev,
-          [name]: value
-        }));
-      }
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        [name]: value
-      }));
-    }
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
     setError('');
-
     if (name === 'branch' && value) {
       setAvailableClasses([]);
       setAvailableSections([]);
@@ -299,20 +219,17 @@ export default function StudentsPage() {
         classRef: '',
         section: ''
       }));
-
       if (value) {
         const branchClasses = await fetchClassesByBranch(value);
         setAvailableClasses(branchClasses);
       }
     }
-
     if (name === 'classRef' && value) {
       setAvailableSections([]);
       setFormData(prev => ({
         ...prev,
         section: ''
       }));
-
       if (value) {
         const classSections = await fetchSectionsByClass(value);
         setAvailableSections(classSections);
@@ -322,7 +239,6 @@ export default function StudentsPage() {
 
   const openCreateModal = () => {
     setEditingStudent(null);
-    const generatedPassword = generatePassword();
     setFormData({
       fullName: '',
       rollNo: '',
@@ -331,9 +247,7 @@ export default function StudentsPage() {
       parentMobile: '',
       branch: '',
       classRef: '',
-      section: '',
-      username: '',
-      password: generatedPassword
+      section: ''
     });
     setAvailableClasses([]);
     setAvailableSections([]);
@@ -341,14 +255,11 @@ export default function StudentsPage() {
     setSuccessMessage('');
     setShowModal(true);
   };
-
   const openEditModal = async (student) => {
     setEditingStudent(student);
-
     const branchId = student.branch?._id || student.branch;
     const classId = student.classRef?._id || student.classRef;
     const sectionId = student.section?._id || student.section;
-
     setFormData({
       fullName: student.fullName || '',
       rollNo: student.rollNo || '',
@@ -357,11 +268,8 @@ export default function StudentsPage() {
       parentMobile: student.parentMobile || '',
       branch: branchId || '',
       classRef: classId || '',
-      section: sectionId || '',
-      username: '', // Username cannot be edited
-      password: ''  // Password cannot be edited through student update
+      section: sectionId || ''
     });
-
     if (branchId) {
       const branchClasses = await fetchClassesByBranch(branchId);
       setAvailableClasses(branchClasses);
@@ -370,30 +278,34 @@ export default function StudentsPage() {
       const classSections = await fetchSectionsByClass(classId);
       setAvailableSections(classSections);
     }
-
     setError('');
     setSuccessMessage('');
     setShowModal(true);
   };
-
   const openDetailsModal = (student) => {
     setSelectedStudent(student);
     setShowDetailsModal(true);
   };
 
-  const openCredentialsModal = (student, credentials) => {
+  const openCredentialsModal = (student) => {
+    // Get credentials from the student's linked user
+    const username = student.user?.username || student.rollNo;
+    const password = student.parentMobile; // Password is parentMobile as per backend
     setSelectedStudent(student);
-    setNewCredentials(credentials);
+    setNewCredentials({
+      username: username,
+      password: password,
+      fullName: student.fullName,
+      rollNo: student.rollNo
+    });
     setShowCredentialsModal(true);
     setCopied(false);
   };
-
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
-
   const validateForm = () => {
     if (!editingStudent) {
       if (!formData.branch) {
@@ -408,59 +320,41 @@ export default function StudentsPage() {
         setError('Please select a section');
         return false;
       }
-      if (!formData.username) {
-        setError('Username is required');
-        return false;
-      }
-      if (!formData.password) {
-        setError('Password is required');
-        return false;
-      }
     }
-
     if (!formData.fullName?.trim()) {
       setError('Full name is required');
       return false;
     }
-
     if (!formData.rollNo?.trim()) {
       setError('Roll number is required');
       return false;
     }
-
     if (!formData.parentName?.trim()) {
       setError('Parent name is required');
       return false;
     }
-
     if (!formData.parentMobile?.trim()) {
       setError('Parent mobile number is required');
       return false;
     }
-
     const mobileRegex = /^[0-9]{10}$/;
     if (!mobileRegex.test(formData.parentMobile.replace(/\D/g, ''))) {
       setError('Please enter a valid 10-digit mobile number');
       return false;
     }
-
     return true;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (!validateForm()) {
       return;
     }
-
     setSubmitting(true);
     setError('');
     setSuccessMessage('');
-
     try {
       let response;
-
       if (editingStudent) {
         const updateData = {
           fullName: formData.fullName.trim(),
@@ -468,16 +362,13 @@ export default function StudentsPage() {
           motherName: formData.motherName?.trim() || '',
           parentMobile: formData.parentMobile.trim()
         };
-
         response = await apiRequest(`/students/${editingStudent._id}`, {
           method: 'PUT',
           body: JSON.stringify(updateData)
         });
-
         if (response && response.success) {
           setSuccessMessage('Student updated successfully!');
           await fetchAllStudents();
-
           setTimeout(() => {
             setShowModal(false);
             setSuccessMessage('');
@@ -492,42 +383,40 @@ export default function StudentsPage() {
           parentMobile: formData.parentMobile.trim(),
           branch: formData.branch,
           classRef: formData.classRef,
-          section: formData.section,
-          username: formData.username,
-          password: formData.password
+          section: formData.section
         };
-
         response = await apiRequest('/students', {
           method: 'POST',
           body: JSON.stringify(createData)
         });
-
         if (response && response.success) {
           setSuccessMessage('Student created successfully!');
           await fetchAllStudents();
-
-          // Show credentials modal with the generated credentials
-          const newStudent = response.data || response.student;
+          // Get the newly created student with populated user
+          const newStudent = response.data;
           if (newStudent) {
-            openCredentialsModal(newStudent, {
-              username: formData.username,
-              password: formData.password,
-              fullName: formData.fullName,
-              rollNo: formData.rollNo
-            });
+            // Fetch the complete student data with populated user
+            const studentDetails = await apiRequest(`/students/${newStudent._id}`);
+            if (studentDetails.success) {
+              openCredentialsModal(studentDetails.data);
+            } else {
+              // Fallback: show credentials using form data
+              openCredentialsModal({
+                fullName: formData.fullName,
+                rollNo: formData.rollNo,
+                user: { username: formData.rollNo },
+                parentMobile: formData.parentMobile
+              });
+            }
           }
-
           setShowModal(false);
           setSuccessMessage('');
         }
       }
     } catch (error) {
       console.error('Error saving student:', error);
-
-      if (error.message?.includes('username already exists')) {
-        setError('Username already exists. Please try a different username or modify the name/roll number.');
-      } else if (error.message?.includes('roll number already exists')) {
-        setError('A student with this roll number already exists in this section.');
+      if (error.message?.includes('username already exists') || error.message?.includes('roll number already exists')) {
+        setError('A student with this roll number already exists.');
       } else if (error.message?.includes('Section does not belong to this class')) {
         setError('Selected section does not belong to the chosen class.');
       } else if (error.message?.includes('Class does not belong to this branch')) {
@@ -542,13 +431,11 @@ export default function StudentsPage() {
 
   const handleDelete = async (id) => {
     if (!confirm('Are you sure you want to delete this student? This action cannot be undone and will remove the student\'s login credentials.')) return;
-
     try {
       setError('');
       const response = await apiRequest(`/students/${id}`, {
         method: 'DELETE'
       });
-
       if (response && response.success) {
         setSuccessMessage('Student deleted successfully!');
         await fetchAllStudents();
@@ -566,11 +453,9 @@ export default function StudentsPage() {
     setError('');
     fetchInitialData();
   };
-
   // Filter students based on search
   const filteredStudents = students.filter(student => {
     if (!searchTerm) return true;
-
     const searchLower = searchTerm.toLowerCase();
     return (
       student.fullName?.toLowerCase().includes(searchLower) ||
@@ -612,8 +497,8 @@ export default function StudentsPage() {
 
   if (loading && allStudents.length === 0) {
     return (
-      <ProtectedRoute>
-        <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <AdminLayout>
+        <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
             <div className="flex items-center justify-center space-x-2 mb-4">
               <div className="w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
@@ -632,274 +517,221 @@ export default function StudentsPage() {
             )}
           </div>
         </div>
-      </ProtectedRoute>
+      </AdminLayout>
     );
   }
-
   return (
-    <ProtectedRoute>
-      <div className="flex min-h-screen bg-gray-100">
-        {/* SIDEBAR */}
-        <div className="w-64 bg-[#0f172a] text-white flex flex-col justify-between">
-          <div>
-            <div className="p-6">
-              <h1 className="text-xl font-bold">SL</h1>
-              <p className="text-sm text-gray-400">Admin Portal</p>
-            </div>
-
-            <nav className="space-y-2 px-4">
-              <Link href="/admin-dashboard">
-                <SidebarItem icon={<LayoutDashboard />} label="Dashboard" />
-              </Link>
-              <Link href="/admin-dashboard/branches">
-                <SidebarItem icon={<Building />} label="Branches" />
-              </Link>
-              <Link href="/admin-dashboard/classes">
-                <SidebarItem icon={<Layers />} label="Classes" />
-              </Link>
-              <Link href="/admin-dashboard/sections">
-                <SidebarItem icon={<Grid />} label="Sections" />
-              </Link>
-              <Link href="/admin-dashboard/students">
-                <SidebarItem icon={<GraduationCap />} label="Students" active={true} />
-              </Link>
-              <Link href="/admin-dashboard/teachers">
-                <SidebarItem icon={<Users />} label="Teachers" />
-              </Link>
-              <Link href="/admin-dashboard/subjects">
-                <SidebarItem icon={<BookOpen />} label="Subjects" />
-              </Link>
-              <Link href="/admin-dashboard/assignsubject">
-                <SidebarItem icon={<BookMarked />} label="Assign Subject" />
-              </Link>
-            </nav>
-          </div>
-
-          <div className="p-4">
-            <button
-              onClick={handleLogout}
-              className="flex items-center gap-2 w-full px-4 py-2 bg-red-500 rounded-lg hover:bg-red-600 transition"
-            >
-              <LogOut size={18} /> Logout
-            </button>
-          </div>
+    <AdminLayout>
+      {/* HEADER */}
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h2 className="text-3xl font-bold text-gray-900">Students</h2>
+          <p className="text-gray-700">Manage student records and enrollments</p>
         </div>
-
-        {/* MAIN CONTENT */}
-        <div className="flex-1 p-8 overflow-auto">
-          {/* HEADER */}
-          <div className="flex justify-between items-center mb-6">
-            <div>
-              <h2 className="text-3xl font-bold text-gray-900">Students</h2>
-              <p className="text-gray-700">Manage student records and enrollments</p>
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={handleRetry}
-                className="flex items-center gap-2 bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition"
-                title="Refresh"
-              >
-                <RefreshCw size={18} />
-              </button>
-              <button
-                onClick={openCreateModal}
-                className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg transition"
-              >
-                <Plus size={18} /> Add Student
-              </button>
-            </div>
-          </div>
-
-          {/* Error Message */}
-          {error && (
-            <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center gap-2">
-              <AlertCircle size={20} />
-              <span>{error}</span>
-              <button
-                onClick={() => setError('')}
-                className="ml-auto text-red-500 hover:text-red-700"
-              >
-                <X size={18} />
-              </button>
-            </div>
-          )}
-
-          {/* Success Message */}
-          {successMessage && (
-            <div className="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg flex items-center gap-2">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-              <span>{successMessage}</span>
-            </div>
-          )}
-
-          {/* FILTERS AND SEARCH */}
-          <div className="mb-6 grid grid-cols-1 md:grid-cols-5 gap-4">
-            {/* Branch Filter */}
-            <div className="relative">
-              <select
-                value={selectedBranch}
-                onChange={(e) => setSelectedBranch(e.target.value)}
-                className="w-full pl-3 pr-10 py-2 border border-gray-300 text-black rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none appearance-none bg-white"
-              >
-                <option value="all">All Branches</option>
-                {branches.map(branch => (
-                  <option key={branch._id} value={branch._id}>
-                    {branch.branchName}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" size={18} />
-            </div>
-
-            {/* Class Filter */}
-            <div className="relative">
-              <select
-                value={selectedClass}
-                onChange={(e) => setSelectedClass(e.target.value)}
-                className="w-full pl-3 pr-10 py-2 border border-gray-300 text-black rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none appearance-none bg-white"
-                disabled={selectedBranch === 'all'}
-              >
-                <option value="all">All Classes</option>
-                {filteredClasses.map((cls) => (
-                  <option key={cls._id} value={cls._id}>
-                    {cls.className}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" size={18} />
-            </div>
-
-            {/* Section Filter */}
-            <div className="relative">
-              <select
-                value={selectedSection}
-                onChange={(e) => setSelectedSection(e.target.value)}
-                className="w-full pl-3 pr-10 py-2 border border-gray-300 text-black rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none appearance-none bg-white"
-                disabled={selectedClass === 'all'}
-              >
-                <option value="all">All Sections</option>
-                {filteredSections.map((section) => (
-                  <option key={section._id} value={section._id}>
-                    {section.sectionName}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" size={18} />
-            </div>
-
-            {/* Search Bar */}
-            <div className="relative md:col-span-2">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-              <input
-                type="text"
-                placeholder="Search by name, roll number, parent name, phone..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 text-black rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none"
-              />
-            </div>
-          </div>
-
-          {/* STUDENTS TABLE */}
-          <div className="bg-white rounded-xl shadow overflow-hidden">
-            <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Roll No</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student Name</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Parent Name</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Branch/Class/Section</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {filteredStudents.length > 0 ? (
-                  filteredStudents.map((student, index) => (
-                    <tr key={student._id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 text-sm text-gray-900">{index + 1}</td>
-                      <td className="px-6 py-4 text-sm font-mono font-medium text-gray-900">{student.rollNo}</td>
-                      <td className="px-6 py-4 text-sm text-gray-900">
-                        <div className="flex items-center gap-1">
-                          <UserCircle size={16} className="text-gray-500" />
-                          {student.fullName}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-900">{student.parentName}</td>
-                      <td className="px-6 py-4 text-sm text-gray-900">
-                        <div className="flex items-center gap-1">
-                          <Phone size={14} className="text-gray-500" />
-                          {student.parentMobile}
-                        </div>
-                        {student.motherName && (
-                          <div className="text-xs text-gray-500 mt-1">
-                            Mother: {student.motherName}
-                          </div>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-900">
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-1">
-                            <Building size={14} className="text-gray-500" />
-                            <span>{getBranchName(student.branch)}</span>
-                          </div>
-                          <div className="flex items-center gap-1 text-xs">
-                            <BookOpen size={14} className="text-gray-500" />
-                            <span>{getClassName(student.classRef)} - {getSectionName(student.section)}</span>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-sm">
-                        <div className="flex space-x-2">
-                          <button
-                            onClick={() => openDetailsModal(student)}
-                            className="p-1 text-blue-600 hover:bg-blue-100 rounded transition"
-                            title="View Details"
-                          >
-                            <Eye size={18} />
-                          </button>
-                          <button
-                            onClick={() => openEditModal(student)}
-                            className="p-1 text-blue-600 hover:bg-blue-100 rounded transition"
-                            title="Edit"
-                          >
-                            <Edit size={18} />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(student._id)}
-                            className="p-1 text-red-600 hover:bg-red-100 rounded transition"
-                            title="Delete"
-                          >
-                            <Trash2 size={18} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="7" className="px-6 py-8 text-center text-gray-500">
-                      {searchTerm
-                        ? 'No students match your search criteria.'
-                        : selectedSection !== 'all'
-                          ? 'No students found in this section. Click "Add Student" to enroll one.'
-                          : selectedClass !== 'all'
-                            ? 'No students found in this class. Click "Add Student" to enroll one.'
-                            : selectedBranch !== 'all'
-                              ? 'No students found in this branch. Click "Add Student" to enroll one.'
-                              : 'No students found. Click "Add Student" to enroll one.'}
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+        <div className="flex gap-2">
+          <button
+            onClick={handleRetry}
+            className="flex items-center gap-2 bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition"
+            title="Refresh"
+          >
+            <RefreshCw size={18} />
+          </button>
+          <button
+            onClick={openCreateModal}
+            className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg transition"
+          >
+            <Plus size={18} /> Add Student
+          </button>
         </div>
       </div>
-
+      {/* Error Message */}
+      {error && (
+        <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center gap-2">
+          <AlertCircle size={20} />
+          <span>{error}</span>
+          <button
+            onClick={() => setError('')}
+            className="ml-auto text-red-500 hover:text-red-700"
+          >
+            <X size={18} />
+          </button>
+        </div>
+      )}
+      {/* Success Message */}
+      {successMessage && (
+        <div className="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg flex items-center gap-2">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+          <span>{successMessage}</span>
+        </div>
+      )}
+      {/* FILTERS AND SEARCH */}
+      <div className="mb-6 grid grid-cols-1 md:grid-cols-5 gap-4">
+        {/* Branch Filter */}
+        <div className="relative">
+          <select
+            value={selectedBranch}
+            onChange={(e) => setSelectedBranch(e.target.value)}
+            className="w-full pl-3 pr-10 py-2 border border-gray-300 text-black rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none appearance-none bg-white"
+          >
+            <option value="all">All Branches</option>
+            {branches.map(branch => (
+              <option key={branch._id} value={branch._id}>
+                {branch.branchName}
+              </option>
+            ))}
+          </select>
+          <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" size={18} />
+        </div>
+        {/* Class Filter */}
+        <div className="relative">
+          <select
+            value={selectedClass}
+            onChange={(e) => setSelectedClass(e.target.value)}
+            className="w-full pl-3 pr-10 py-2 border border-gray-300 text-black rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none appearance-none bg-white"
+            disabled={selectedBranch === 'all'}
+          >
+            <option value="all">All Classes</option>
+            {filteredClasses.map((cls) => (
+              <option key={cls._id} value={cls._id}>
+                {cls.className}
+              </option>
+            ))}
+          </select>
+          <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" size={18} />
+        </div>
+        {/* Section Filter */}
+        <div className="relative">
+          <select
+            value={selectedSection}
+            onChange={(e) => setSelectedSection(e.target.value)}
+            className="w-full pl-3 pr-10 py-2 border border-gray-300 text-black rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none appearance-none bg-white"
+            disabled={selectedClass === 'all'}
+          >
+            <option value="all">All Sections</option>
+            {filteredSections.map((section) => (
+              <option key={section._id} value={section._id}>
+                {section.sectionName}
+              </option>
+            ))}
+          </select>
+          <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" size={18} />
+        </div>
+        {/* Search Bar */}
+        <div className="relative md:col-span-2">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+          <input
+            type="text"
+            placeholder="Search by name, roll number, parent name, phone..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 text-black rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none"
+          />
+        </div>
+      </div>
+      {/* STUDENTS TABLE */}
+      <div className="bg-white rounded-xl shadow overflow-hidden">
+        <table className="w-full">
+          <thead className="bg-gray-50 border-b border-gray-200">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Roll No</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student Name</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Parent Name</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Branch/Class/Section</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200">
+            {filteredStudents.length > 0 ? (
+              filteredStudents.map((student, index) => (
+                <tr key={student._id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 text-sm text-gray-900">{index + 1}</td>
+                  <td className="px-6 py-4 text-sm font-mono font-medium text-gray-900">{student.rollNo}</td>
+                  <td className="px-6 py-4 text-sm text-gray-900">
+                    <div className="flex items-center gap-1">
+                      <UserCircle size={16} className="text-gray-500" />
+                      {student.fullName}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-900">{student.parentName}</td>
+                  <td className="px-6 py-4 text-sm text-gray-900">
+                    <div className="flex items-center gap-1">
+                      <Phone size={14} className="text-gray-500" />
+                      {student.parentMobile}
+                    </div>
+                    {student.motherName && (
+                      <div className="text-xs text-gray-500 mt-1">
+                        Mother: {student.motherName}
+                      </div>
+                    )}
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-900">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-1">
+                        <Building size={14} className="text-gray-500" />
+                        <span>{getBranchName(student.branch)}</span>
+                      </div>
+                      <div className="flex items-center gap-1 text-xs">
+                        <BookOpen size={14} className="text-gray-500" />
+                        <span>{getClassName(student.classRef)} - {getSectionName(student.section)}</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-sm">
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => openDetailsModal(student)}
+                        className="p-1 text-blue-600 hover:bg-blue-100 rounded transition"
+                        title="View Details"
+                      >
+                        <Eye size={18} />
+                      </button>
+                      <button
+                        onClick={() => openEditModal(student)}
+                        className="p-1 text-blue-600 hover:bg-blue-100 rounded transition"
+                        title="Edit"
+                      >
+                        <Edit size={18} />
+                      </button>
+                      <button
+                        onClick={() => openCredentialsModal(student)}
+                        className="p-1 text-green-600 hover:bg-green-100 rounded transition"
+                        title="View Credentials"
+                      >
+                        <Key size={18} />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(student._id)}
+                        className="p-1 text-red-600 hover:bg-red-100 rounded transition"
+                        title="Delete"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="7" className="px-6 py-8 text-center text-gray-500">
+                  {searchTerm
+                    ? 'No students match your search criteria.'
+                    : selectedSection !== 'all'
+                      ? 'No students found in this section. Click "Add Student" to enroll one.'
+                      : selectedClass !== 'all'
+                        ? 'No students found in this class. Click "Add Student" to enroll one.'
+                        : selectedBranch !== 'all'
+                          ? 'No students found in this branch. Click "Add Student" to enroll one.'
+                          : 'No students found. Click "Add Student" to enroll one.'}
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
       {/* CREATE/EDIT MODAL - HORIZONTAL LAYOUT */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 overflow-y-auto">
@@ -916,7 +748,6 @@ export default function StudentsPage() {
                 <X size={20} />
               </button>
             </div>
-
             <form onSubmit={handleSubmit}>
               {/* Personal Information Section */}
               <div className="mb-6">
@@ -941,7 +772,6 @@ export default function StudentsPage() {
                       placeholder="Enter full name"
                     />
                   </div>
-
                   {/* Roll Number */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -961,7 +791,6 @@ export default function StudentsPage() {
                       <p className="text-xs text-gray-500 mt-1">Cannot be edited</p>
                     )}
                   </div>
-
                   {/* Parent Mobile */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -978,7 +807,6 @@ export default function StudentsPage() {
                       placeholder="10 digit mobile"
                     />
                   </div>
-
                   {/* Father's Name */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -995,7 +823,6 @@ export default function StudentsPage() {
                       placeholder="Enter father's name"
                     />
                   </div>
-
                   {/* Mother's Name */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -1013,7 +840,6 @@ export default function StudentsPage() {
                   </div>
                 </div>
               </div>
-
               {/* Academic Information Section */}
               <div className="mb-6">
                 <h4 className="text-lg font-semibold text-gray-700 mb-4 flex items-center gap-2">
@@ -1045,7 +871,6 @@ export default function StudentsPage() {
                       <p className="text-xs text-gray-500 mt-1">Cannot be changed</p>
                     )}
                   </div>
-
                   {/* Class Selection */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -1067,7 +892,6 @@ export default function StudentsPage() {
                       ))}
                     </select>
                   </div>
-
                   {/* Section Selection */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -1091,89 +915,15 @@ export default function StudentsPage() {
                   </div>
                 </div>
               </div>
-
-              {/* Login Credentials Section - Only for new students */}
-              {!editingStudent && (
-                <div className="mb-6">
-                  <h4 className="text-lg font-semibold text-gray-700 mb-4 flex items-center gap-2">
-                    <Lock size={20} className="text-amber-500" />
-                    Login Credentials
-                  </h4>
-                  <p className="text-sm text-gray-500 mb-3 bg-blue-50 p-3 rounded-lg">
-                    These credentials will be used by the student to login to the system.
-                    Username is auto-generated based on name and roll number.
-                  </p>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Username */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Username <span className="text-red-500">*</span>
-                      </label>
-                      <div className="relative">
-                        <input
-                          type="text"
-                          name="username"
-                          value={formData.username}
-                          onChange={handleInputChange}
-                          required
-                          disabled={submitting}
-                          className="w-full p-2 pl-8 border border-gray-300 text-black rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none bg-gray-50"
-                          placeholder="Auto-generated username"
-                        />
-                        <User size={16} className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                      </div>
-                      <p className="text-xs text-gray-500 mt-1">
-                        You can modify this if needed
-                      </p>
-                    </div>
-
-                    {/* Password */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Password <span className="text-red-500">*</span>
-                      </label>
-                      <div className="flex gap-2">
-                        <div className="relative flex-1">
-                          <input
-                            type="text"
-                            name="password"
-                            value={formData.password}
-                            onChange={handleInputChange}
-                            required
-                            disabled={submitting}
-                            className="w-full p-2 pl-8 border border-gray-300 text-black rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none"
-                            placeholder="Auto-generated password"
-                          />
-                          <Key size={16} className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => setFormData(prev => ({ ...prev, password: generatePassword() }))}
-                          className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition flex items-center gap-1"
-                          title="Generate new password"
-                        >
-                          <RefreshCw size={16} />
-                          <span className="text-sm hidden sm:inline">Generate</span>
-                        </button>
-                      </div>
-                      <p className="text-xs text-gray-500 mt-1">
-                        You can modify or generate a new one
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
               {/* Note for editing */}
               {editingStudent && (
                 <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-700">
                   <p className="flex items-center gap-2">
                     <AlertCircle size={18} />
-                    Note: Username and password cannot be edited here. To reset password, use the admin tools.
+                    Note: Roll number, branch, class and section cannot be edited after creation.
                   </p>
                 </div>
               )}
-
               {/* Error Message */}
               {error && (
                 <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg flex items-center gap-2">
@@ -1181,7 +931,6 @@ export default function StudentsPage() {
                   <span className="text-sm">{error}</span>
                 </div>
               )}
-
               {/* Form Actions */}
               <div className="flex justify-end gap-3 pt-4 border-t">
                 <button
@@ -1213,7 +962,6 @@ export default function StudentsPage() {
           </div>
         </div>
       )}
-
       {/* CREDENTIALS MODAL - Show after student creation */}
       {showCredentialsModal && newCredentials && selectedStudent && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -1227,14 +975,12 @@ export default function StudentsPage() {
                 <X size={20} />
               </button>
             </div>
-
             <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
               <p className="text-green-700 text-sm flex items-center gap-2">
                 <CheckCircle size={18} className="text-green-500" />
                 Student created successfully! Please save these credentials.
               </p>
             </div>
-
             <div className="space-y-4">
               <div className="bg-gray-50 p-4 rounded-lg">
                 <h4 className="font-semibold text-gray-700 mb-3">Student Information</h4>
@@ -1243,7 +989,6 @@ export default function StudentsPage() {
                   <p><span className="text-gray-500">Roll No:</span> <span className="font-medium">{newCredentials.rollNo}</span></p>
                 </div>
               </div>
-
               <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
                 <h4 className="font-semibold text-amber-700 mb-3">Login Credentials</h4>
                 <div className="space-y-3">
@@ -1280,7 +1025,6 @@ export default function StudentsPage() {
                   </p>
                 )}
               </div>
-
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
                 <p className="text-xs text-blue-700 flex items-center gap-2">
                   <AlertCircle size={14} />
@@ -1288,7 +1032,6 @@ export default function StudentsPage() {
                 </p>
               </div>
             </div>
-
             <div className="flex justify-end mt-6">
               <button
                 onClick={() => setShowCredentialsModal(false)}
@@ -1300,7 +1043,6 @@ export default function StudentsPage() {
           </div>
         </div>
       )}
-
       {/* STUDENT DETAILS MODAL */}
       {showDetailsModal && selectedStudent && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -1314,7 +1056,6 @@ export default function StudentsPage() {
                 <X size={20} />
               </button>
             </div>
-
             <div className="space-y-4">
               {/* Basic Information */}
               <div className="grid grid-cols-2 gap-4">
@@ -1339,7 +1080,6 @@ export default function StudentsPage() {
                   <p className="font-medium text-gray-900">{selectedStudent.parentMobile}</p>
                 </div>
               </div>
-
               {/* Location Information */}
               <div className="border-t pt-4">
                 <h4 className="font-semibold text-gray-900 mb-2">Location</h4>
@@ -1358,7 +1098,6 @@ export default function StudentsPage() {
                   </div>
                 </div>
               </div>
-
               {/* System Information */}
               <div className="border-t pt-4">
                 <h4 className="font-semibold text-gray-900 mb-2">System Information</h4>
@@ -1368,8 +1107,8 @@ export default function StudentsPage() {
                     <p className="font-mono text-sm text-gray-900">{selectedStudent._id}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-500">Login ID</p>
-                    <p className="font-mono text-sm text-gray-900">{selectedStudent.loginId || 'Not generated yet'}</p>
+                    <p className="text-sm text-gray-500">Username</p>
+                    <p className="font-mono text-sm text-gray-900">{selectedStudent.user?.username || selectedStudent.rollNo}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Created At</p>
@@ -1386,7 +1125,6 @@ export default function StudentsPage() {
                 </div>
               </div>
             </div>
-
             <div className="flex justify-end mt-6">
               <button
                 onClick={() => setShowDetailsModal(false)}
@@ -1398,20 +1136,6 @@ export default function StudentsPage() {
           </div>
         </div>
       )}
-    </ProtectedRoute>
-  );
-}
-
-function SidebarItem({ icon, label, active }) {
-  return (
-    <div
-      className={`flex items-center gap-3 px-4 py-2 rounded-lg cursor-pointer transition ${active
-          ? 'bg-amber-500 text-white'
-          : 'hover:bg-gray-700 text-gray-300'
-        }`}
-    >
-      {icon}
-      {label}
-    </div>
+    </AdminLayout>
   );
 }

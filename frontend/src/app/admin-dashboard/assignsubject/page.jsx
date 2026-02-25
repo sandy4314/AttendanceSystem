@@ -1,32 +1,11 @@
 'use client';
 
-import ProtectedRoute from '../../../components/ProtectedRoute';
+import AdminLayout from '../../../components/AdminLayout';
 import { useState, useEffect } from 'react';
 import { apiRequest } from '../../../services/api';
-import { useRouter } from 'next/navigation';
-import {
-  BookOpen,
-  Plus,
-  Trash2,
-  Search,
-  X,
-  LogOut,
-  LayoutDashboard,
-  Building,
-  Layers,
-  Users,
-  GraduationCap,
-  AlertCircle,
-  RefreshCw,
-  ChevronDown,
-  User,
-  BookMarked,
-  Grid
-} from 'lucide-react';
-import Link from 'next/link';
+import {BookOpen,Plus,Trash2,Search,X,AlertCircle,RefreshCw,ChevronDown,User,Building,Layers,Grid} from 'lucide-react';
 
 export default function AssignSubjectPage() {
-  const router = useRouter();
   const [assignments, setAssignments] = useState([]);
   const [filteredAssignments, setFilteredAssignments] = useState([]);
   const [teachers, setTeachers] = useState([]);
@@ -126,23 +105,16 @@ export default function AssignSubjectPage() {
   const fetchTeachers = async () => {
     try {
       const response = await apiRequest('/teachers');
-      console.log('Teachers API Response:', response);
-      
       if (response) {
         if (Array.isArray(response)) {
           setTeachers(response);
-          console.log('Teachers set (direct array):', response.length);
         } else if (response.success && Array.isArray(response.data)) {
           setTeachers(response.data);
-          console.log('Teachers set (wrapped data):', response.data.length);
         } else if (response.data && Array.isArray(response.data)) {
           setTeachers(response.data);
-          console.log('Teachers set (data property):', response.data.length);
         } else if (response.teachers && Array.isArray(response.teachers)) {
           setTeachers(response.teachers);
-          console.log('Teachers set (teachers property):', response.teachers.length);
         } else {
-          console.error('Unexpected teachers response format:', response);
           setTeachers([]);
         }
       } else {
@@ -157,28 +129,16 @@ export default function AssignSubjectPage() {
   const fetchSubjects = async () => {
     try {
       const response = await apiRequest('/subjects');
-      console.log('Subjects API Response:', response);
-      
       if (response) {
-        // Handle different response structures
         if (Array.isArray(response)) {
-          // Direct array response
           setSubjects(response);
-          console.log('Subjects set (direct array):', response.length);
         } else if (response.success && Array.isArray(response.data)) {
-          // Wrapped response with data property
           setSubjects(response.data);
-          console.log('Subjects set (wrapped data):', response.data.length);
         } else if (response.data && Array.isArray(response.data)) {
-          // Response with data property but no success flag
           setSubjects(response.data);
-          console.log('Subjects set (data property):', response.data.length);
         } else if (response.subjects && Array.isArray(response.subjects)) {
-          // Response with subjects property
           setSubjects(response.subjects);
-          console.log('Subjects set (subjects property):', response.subjects.length);
         } else {
-          console.error('Unexpected subjects response format:', response);
           setSubjects([]);
         }
       } else {
@@ -353,13 +313,11 @@ export default function AssignSubjectPage() {
         return teacherId === selectedTeacher;
       });
     }
-    
     setFilteredAssignments(filtered);
   };
 
   const handleInputChange = async (e) => {
     const { name, value } = e.target;
-    
     setFormData(prev => ({
       ...prev,
       [name]: value
@@ -371,9 +329,7 @@ export default function AssignSubjectPage() {
         ...prev,
         classRef: '',
         section: ''
-        // Don't reset subject when branch changes - we want all subjects to show
       }));
-      
       const branchClasses = await fetchClassesByBranch(value);
       setFilteredClasses(branchClasses);
     }
@@ -383,7 +339,6 @@ export default function AssignSubjectPage() {
         ...prev,
         section: ''
       }));
-      
       const classSections = await fetchSectionsByClass(value);
       setFilteredSections(classSections);
     }
@@ -395,9 +350,7 @@ export default function AssignSubjectPage() {
   };
 
   const openCreateModal = async () => {
-    // Refresh teachers and subjects before opening modal
     await refreshTeachersAndSubjects();
-    
     setFormData({
       teacher: '',
       subject: '',
@@ -437,11 +390,9 @@ export default function AssignSubjectPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
     if (!validateForm()) {
       return;
     }
-    
     setSubmitting(true);
     setError('');
     setSuccessMessage('');
@@ -451,15 +402,12 @@ export default function AssignSubjectPage() {
         method: 'POST',
         body: JSON.stringify(formData)
       });
-
       if (response) {
         if (response.success || response.message === 'Assignment created successfully' || response._id) {
           setSuccessMessage('Subject assigned successfully!');
           await fetchAssignments();
-          
           // Refresh teachers and subjects to ensure dropdowns are up to date
           await refreshTeachersAndSubjects();
-          
           setTimeout(() => {
             setShowModal(false);
             setSuccessMessage('');
@@ -484,12 +432,10 @@ export default function AssignSubjectPage() {
 
   const handleDelete = async (id) => {
     if (!confirm('Are you sure you want to remove this assignment? This action cannot be undone.')) return;
-
     try {
       const response = await apiRequest(`/assignsubject/${id}`, {
         method: 'DELETE'
       });
-
       if (response?.success || response?.message === 'Deleted successfully') {
         setSuccessMessage('Assignment removed successfully!');
         await fetchAssignments();
@@ -503,11 +449,6 @@ export default function AssignSubjectPage() {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.clear();
-    router.push('/');
-  };
-
   const handleRetry = () => {
     setError('');
     fetchInitialData();
@@ -516,7 +457,6 @@ export default function AssignSubjectPage() {
   // Search filter
   const searchedAssignments = filteredAssignments.filter(assignment => {
     if (!searchTerm) return true;
-    
     const searchLower = searchTerm.toLowerCase();
     return (
       assignment.teacher?.fullName?.toLowerCase().includes(searchLower) ||
@@ -554,8 +494,8 @@ export default function AssignSubjectPage() {
 
   if (loading && assignments.length === 0) {
     return (
-      <ProtectedRoute>
-        <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <AdminLayout>
+        <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
             <div className="flex items-center justify-center space-x-2 mb-4">
               <div className="w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
@@ -574,262 +514,209 @@ export default function AssignSubjectPage() {
             )}
           </div>
         </div>
-      </ProtectedRoute>
+      </AdminLayout>
     );
   }
 
   return (
-    <ProtectedRoute>
-      <div className="flex min-h-screen bg-gray-100">
-        {/* SIDEBAR */}
-        <div className="w-64 bg-[#0f172a] text-white flex flex-col justify-between">
-          <div>
-            <div className="p-6">
-              <h1 className="text-xl font-bold">SL</h1>
-              <p className="text-sm text-gray-400">Admin Portal</p>
-            </div>
+    <AdminLayout>
+      {/* HEADER */}
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h2 className="text-3xl font-bold text-gray-900">Assign Subjects to Teachers</h2>
+          <p className="text-gray-700">Manage teacher subject assignments</p>
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={handleRetry}
+            className="flex items-center gap-2 bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition"
+            title="Refresh"
+          >
+            <RefreshCw size={18} />
+          </button>
+          <button
+            onClick={openCreateModal}
+            className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg transition"
+          >
+            <Plus size={18} /> Assign Subject
+          </button>
+        </div>
+      </div>
 
-            <nav className="space-y-2 px-4">
-              <Link href="/admin-dashboard">
-                <SidebarItem icon={<LayoutDashboard />} label="Dashboard" />
-              </Link>
-              <Link href="/admin-dashboard/branches">
-                <SidebarItem icon={<Building />} label="Branches" />
-              </Link>
-              <Link href="/admin-dashboard/classes">
-                <SidebarItem icon={<Layers />} label="Classes" />
-              </Link>
-              <Link href="/admin-dashboard/sections">
-                <SidebarItem icon={<Grid />} label="Sections" />
-              </Link>
-              <Link href="/admin-dashboard/students">
-                <SidebarItem icon={<GraduationCap />} label="Students" />
-              </Link>
-              <Link href="/admin-dashboard/teachers">
-                <SidebarItem icon={<Users />} label="Teachers" />
-              </Link>
-              <Link href="/admin-dashboard/subjects">
-                <SidebarItem icon={<BookOpen />} label="Subjects" />
-              </Link>
-              <Link href="/admin-dashboard/assignsubject">
-                <SidebarItem icon={<BookMarked />} label="Assign Subject" active={true} />
-              </Link>
-            </nav>
-          </div>
+      {/* Error Message */}
+      {error && (
+        <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center gap-2">
+          <AlertCircle size={20} />
+          <span>{error}</span>
+          <button
+            onClick={() => setError('')}
+            className="ml-auto text-red-500 hover:text-red-700"
+          >
+            <X size={18} />
+          </button>
+        </div>
+      )}
 
-          <div className="p-4">
-            <button
-              onClick={handleLogout}
-              className="flex items-center gap-2 w-full px-4 py-2 bg-red-500 rounded-lg hover:bg-red-600 transition"
-            >
-              <LogOut size={18} /> Logout
-            </button>
-          </div>
+      {/* Success Message */}
+      {successMessage && (
+        <div className="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg flex items-center gap-2">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+          <span>{successMessage}</span>
+        </div>
+      )}
+
+      {/* FILTERS AND SEARCH */}
+      <div className="mb-6 grid grid-cols-1 md:grid-cols-6 gap-4">
+        {/* Branch Filter */}
+        <div className="relative">
+          <select
+            value={selectedBranch}
+            onChange={(e) => setSelectedBranch(e.target.value)}
+            className="w-full pl-3 pr-10 py-2 border border-gray-300 text-black rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none appearance-none bg-white"
+          >
+            <option value="all">All Branches</option>
+            {branches.map(branch => (
+              <option key={branch._id} value={branch._id}>
+                {branch.branchName}
+              </option>
+            ))}
+          </select>
+          <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" size={18} />
         </div>
 
-        {/* MAIN CONTENT */}
-        <div className="flex-1 p-8 overflow-auto">
-          {/* HEADER */}
-          <div className="flex justify-between items-center mb-6">
-            <div>
-              <h2 className="text-3xl font-bold text-gray-900">Assign Subjects to Teachers</h2>
-              <p className="text-gray-700">Manage teacher subject assignments</p>
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={handleRetry}
-                className="flex items-center gap-2 bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition"
-                title="Refresh"
-              >
-                <RefreshCw size={18} />
-              </button>
-              <button
-                onClick={openCreateModal}
-                className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg transition"
-              >
-                <Plus size={18} /> Assign Subject
-              </button>
-            </div>
-          </div>
+        {/* Class Filter */}
+        <div className="relative">
+          <select
+            value={selectedClass}
+            onChange={(e) => setSelectedClass(e.target.value)}
+            className="w-full pl-3 pr-10 py-2 border border-gray-300 text-black rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none appearance-none bg-white"
+            disabled={selectedBranch === 'all'}
+          >
+            <option value="all">All Classes</option>
+            {filteredClasses.map((cls) => (
+              <option key={cls._id} value={cls._id}>
+                {cls.className}
+              </option>
+            ))}
+          </select>
+          <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" size={18} />
+        </div>
 
-          {/* Error Message */}
-          {error && (
-            <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center gap-2">
-              <AlertCircle size={20} />
-              <span>{error}</span>
-              <button
-                onClick={() => setError('')}
-                className="ml-auto text-red-500 hover:text-red-700"
-              >
-                <X size={18} />
-              </button>
-            </div>
-          )}
+        {/* Section Filter */}
+        <div className="relative">
+          <select
+            value={selectedSection}
+            onChange={(e) => setSelectedSection(e.target.value)}
+            className="w-full pl-3 pr-10 py-2 border border-gray-300 text-black rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none appearance-none bg-white"
+            disabled={selectedClass === 'all'}
+          >
+            <option value="all">All Sections</option>
+            {filteredSections.map((section) => (
+              <option key={section._id} value={section._id}>
+                {section.sectionName}
+              </option>
+            ))}
+          </select>
+          <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" size={18} />
+        </div>
 
-          {/* Success Message */}
-          {successMessage && (
-            <div className="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg flex items-center gap-2">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-              <span>{successMessage}</span>
-            </div>
-          )}
+        {/* Teacher Filter */}
+        <div className="relative">
+          <select
+            value={selectedTeacher}
+            onChange={handleTeacherChange}
+            className="w-full pl-3 pr-10 py-2 border border-gray-300 text-black rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none appearance-none bg-white"
+          >
+            <option value="all">All Teachers</option>
+            {teachers.length > 0 ? (
+              teachers.map(teacher => (
+                <option key={teacher._id} value={teacher._id}>
+                  {teacher.fullName}
+                </option>
+              ))
+            ) : (
+              <option value="" disabled>No teachers available</option>
+            )}
+          </select>
+          <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" size={18} />
+        </div>
 
-          
+        {/* Search Bar */}
+        <div className="relative md:col-span-2">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+          <input
+            type="text"
+            placeholder="Search by teacher, subject, branch, class, section..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 text-black rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none"
+          />
+        </div>
+      </div>
 
-          {/* FILTERS AND SEARCH */}
-          <div className="mb-6 grid grid-cols-1 md:grid-cols-6 gap-4">
-            {/* Branch Filter */}
-            <div className="relative">
-              <select
-                value={selectedBranch}
-                onChange={(e) => setSelectedBranch(e.target.value)}
-                className="w-full pl-3 pr-10 py-2 border border-gray-300 text-black rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none appearance-none bg-white"
-              >
-                <option value="all">All Branches</option>
-                {branches.map(branch => (
-                  <option key={branch._id} value={branch._id}>
-                    {branch.branchName}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" size={18} />
-            </div>
-
-            {/* Class Filter */}
-            <div className="relative">
-              <select
-                value={selectedClass}
-                onChange={(e) => setSelectedClass(e.target.value)}
-                className="w-full pl-3 pr-10 py-2 border border-gray-300 text-black rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none appearance-none bg-white"
-                disabled={selectedBranch === 'all'}
-              >
-                <option value="all">All Classes</option>
-                {filteredClasses.map((cls) => (
-                  <option key={cls._id} value={cls._id}>
-                    {cls.className}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" size={18} />
-            </div>
-
-            {/* Section Filter */}
-            <div className="relative">
-              <select
-                value={selectedSection}
-                onChange={(e) => setSelectedSection(e.target.value)}
-                className="w-full pl-3 pr-10 py-2 border border-gray-300 text-black rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none appearance-none bg-white"
-                disabled={selectedClass === 'all'}
-              >
-                <option value="all">All Sections</option>
-                {filteredSections.map((section) => (
-                  <option key={section._id} value={section._id}>
-                    {section.sectionName}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" size={18} />
-            </div>
-
-            {/* Teacher Filter */}
-            <div className="relative">
-              <select
-                value={selectedTeacher}
-                onChange={handleTeacherChange}
-                className="w-full pl-3 pr-10 py-2 border border-gray-300 text-black rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none appearance-none bg-white"
-              >
-                <option value="all">All Teachers</option>
-                {teachers.length > 0 ? (
-                  teachers.map(teacher => (
-                    <option key={teacher._id} value={teacher._id}>
-                      {teacher.fullName}
-                    </option>
-                  ))
-                ) : (
-                  <option value="" disabled>No teachers available</option>
-                )}
-              </select>
-              <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" size={18} />
-            </div>
-
-            {/* Search Bar */}
-            <div className="relative md:col-span-2">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-              <input
-                type="text"
-                placeholder="Search by teacher, subject, branch, class, section..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 text-black rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none"
-              />
-            </div>
-          </div>
-
-          {/* ASSIGNMENTS TABLE */}
-          <div className="bg-white rounded-xl shadow overflow-hidden">
-            <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Teacher</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subject</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Branch</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Class</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Section</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+      {/* ASSIGNMENTS TABLE */}
+      <div className="bg-white rounded-xl shadow overflow-hidden">
+        <table className="w-full">
+          <thead className="bg-gray-50 border-b border-gray-200">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Teacher</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subject</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Branch</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Class</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Section</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200">
+            {searchedAssignments.length > 0 ? (
+              searchedAssignments.map((assignment, index) => (
+                <tr key={assignment._id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 text-sm text-gray-900">{index + 1}</td>
+                  <td className="px-6 py-4 text-sm text-gray-900">
+                    <div className="flex items-center gap-1">
+                      <User size={16} className="text-gray-500" />
+                      {getTeacherName(assignment.teacher)}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-900">
+                    <div className="flex items-center gap-1">
+                      <BookOpen size={16} className="text-gray-500" />
+                      {getSubjectName(assignment.subject)}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-900">
+                    <div className="flex items-center gap-1">
+                      <Building size={16} className="text-gray-500" />
+                      {getBranchName(assignment.branch)}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-900">{getClassName(assignment.classRef)}</td>
+                  <td className="px-6 py-4 text-sm text-gray-900">{getSectionName(assignment.section)}</td>
+                  <td className="px-6 py-4 text-sm">
+                    <button
+                      onClick={() => handleDelete(assignment._id)}
+                      className="p-1 text-red-600 hover:bg-red-100 rounded transition"
+                      title="Remove Assignment"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {searchedAssignments.length > 0 ? (
-                  searchedAssignments.map((assignment, index) => (
-                    <tr key={assignment._id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 text-sm text-gray-900">{index + 1}</td>
-                      <td className="px-6 py-4 text-sm text-gray-900">
-                        <div className="flex items-center gap-1">
-                          <User size={16} className="text-gray-500" />
-                          {getTeacherName(assignment.teacher)}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-900">
-                        <div className="flex items-center gap-1">
-                          <BookOpen size={16} className="text-gray-500" />
-                          {getSubjectName(assignment.subject)}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-900">
-                        <div className="flex items-center gap-1">
-                          <Building size={16} className="text-gray-500" />
-                          {getBranchName(assignment.branch)}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-900">{getClassName(assignment.classRef)}</td>
-                      <td className="px-6 py-4 text-sm text-gray-900">{getSectionName(assignment.section)}</td>
-                      <td className="px-6 py-4 text-sm">
-                        <button
-                          onClick={() => handleDelete(assignment._id)}
-                          className="p-1 text-red-600 hover:bg-red-100 rounded transition"
-                          title="Remove Assignment"
-                        >
-                          <Trash2 size={18} />
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="7" className="px-6 py-8 text-center text-gray-500">
-                      {searchTerm
-                        ? 'No assignments match your search criteria.'
-                        : 'No assignments found. Click "Assign Subject" to create one.'}
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="7" className="px-6 py-8 text-center text-gray-500">
+                  {searchTerm
+                    ? 'No assignments match your search criteria.'
+                    : 'No assignments found. Click "Assign Subject" to create one.'}
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </div>
 
       {/* CREATE ASSIGNMENT MODAL */}
@@ -982,7 +869,6 @@ export default function AssignSubjectPage() {
                       subjects.map(subject => (
                         <option key={subject._id} value={subject._id}>
                           {subject.subjectName} {subject.subjectCode ? `(${subject.subjectCode})` : ''}
-                          {subject.branch ? ` - ${typeof subject.branch === 'object' ? subject.branch.branchName : 'Branch assigned'}` : ''}
                         </option>
                       ))
                     ) : (
@@ -1034,21 +920,6 @@ export default function AssignSubjectPage() {
           </div>
         </div>
       )}
-    </ProtectedRoute>
-  );
-}
-
-function SidebarItem({ icon, label, active }) {
-  return (
-    <div
-      className={`flex items-center gap-3 px-4 py-2 rounded-lg cursor-pointer transition ${
-        active
-          ? 'bg-amber-500 text-white'
-          : 'hover:bg-gray-700 text-gray-300'
-      }`}
-    >
-      {icon}
-      {label}
-    </div>
+    </AdminLayout>
   );
 }
