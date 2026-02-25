@@ -89,7 +89,7 @@ export default function StudentsPage() {
   useEffect(() => {
     if (selectedClass !== 'all') {
       const filtered = sections.filter(sec =>
-        sec.class === selectedClass || sec.class?._id === selectedClass
+        sec.classRef === selectedClass || sec.classRef?._id === selectedClass
       );
       setFilteredSections(filtered);
     } else {
@@ -453,21 +453,6 @@ export default function StudentsPage() {
     setError('');
     fetchInitialData();
   };
-  // Filter students based on search
-  const filteredStudents = students.filter(student => {
-    if (!searchTerm) return true;
-    const searchLower = searchTerm.toLowerCase();
-    return (
-      student.fullName?.toLowerCase().includes(searchLower) ||
-      student.rollNo?.toLowerCase().includes(searchLower) ||
-      student.parentName?.toLowerCase().includes(searchLower) ||
-      student.parentMobile?.includes(searchTerm) ||
-      getBranchName(student.branch).toLowerCase().includes(searchLower) ||
-      getClassName(student.classRef).toLowerCase().includes(searchLower) ||
-      getSectionName(student.section).toLowerCase().includes(searchLower)
-    );
-  });
-
   const getBranchName = (branch) => {
     if (!branch) return 'N/A';
     if (typeof branch === 'object' && branch !== null) {
@@ -476,6 +461,9 @@ export default function StudentsPage() {
     const found = branches.find(b => b && b._id === branch);
     return found ? found.branchName : 'Unknown Branch';
   };
+  
+
+  
 
   const getClassName = (cls) => {
     if (!cls) return 'N/A';
@@ -494,6 +482,24 @@ export default function StudentsPage() {
     const found = sections.find(s => s && s._id === section);
     return found ? found.sectionName : 'Unknown Section';
   };
+
+
+  // Filter students based on search
+  const filteredStudents = students.filter(student => {
+    if (!searchTerm) return true;
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      student.fullName?.toLowerCase().includes(searchLower) ||
+      student.rollNo?.toLowerCase().includes(searchLower) ||
+      student.parentName?.toLowerCase().includes(searchLower) ||
+      student.parentMobile?.includes(searchTerm) ||
+      getBranchName(student.branch).toLowerCase().includes(searchLower) ||
+      getClassName(student.classRef).toLowerCase().includes(searchLower) ||
+      getSectionName(student.section).toLowerCase().includes(searchLower)
+    );
+  });
+
+  
 
   if (loading && allStudents.length === 0) {
     return (

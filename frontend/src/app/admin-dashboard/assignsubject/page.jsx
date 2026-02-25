@@ -267,7 +267,7 @@ export default function AssignSubjectPage() {
   useEffect(() => {
     if (selectedClass !== 'all') {
       const filtered = sections.filter(sec => 
-        sec.class === selectedClass || sec.class?._id === selectedClass
+        sec.classRef === selectedClass || sec.classRef?._id === selectedClass
       );
       setFilteredSections(filtered);
     } else {
