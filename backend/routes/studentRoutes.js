@@ -14,7 +14,7 @@ router.get('/section/:sectionId', authMiddleware.restrictTo('admin','teacher'), 
 
 // Dynamic routes - these should come last
 router.route('/:id')
-  .get(authMiddleware.restrictTo('admin'), studentController.getStudentById)
+  .get(authMiddleware.restrictTo('admin','student'), studentController.getStudentById)
   .put(authMiddleware.restrictTo('admin'), studentController.updateStudent)
   .delete(authMiddleware.restrictTo('admin'), studentController.deleteStudent);
 

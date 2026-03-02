@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import {LayoutDashboard,Building,BookOpen,Layers,Users,GraduationCap,Grid,BookMarked,LogOut} from 'lucide-react';
+import {LayoutDashboard,ClipboardCheck,CalendarDays,BookOpen,LogOut} from 'lucide-react';
 
 function SidebarItem({ icon, label, href, isActive }) {
   return (
@@ -21,7 +21,7 @@ function SidebarItem({ icon, label, href, isActive }) {
   );
 }
 
-export default function AdminSidebar() {
+export default function StudentSidebar() {
   const pathname = usePathname();
   const router = useRouter();
 
@@ -31,21 +31,17 @@ export default function AdminSidebar() {
   };
 
   const menuItems = [
-    { href: '/admin-dashboard', icon: <LayoutDashboard size={20} />, label: 'Dashboard' },
-    { href: '/admin-dashboard/branches', icon: <Building size={20} />, label: 'Branches' },
-    { href: '/admin-dashboard/classes', icon: <BookOpen size={20} />, label: 'Classes' },
-    { href: '/admin-dashboard/sections', icon: <Layers size={20} />, label: 'Sections' },
-    { href: '/admin-dashboard/students', icon: <GraduationCap size={20} />, label: 'Students' },
-    { href: '/admin-dashboard/teachers', icon: <Users size={20} />, label: 'Teachers' },
-    { href: '/admin-dashboard/subjects', icon: <BookOpen size={20} />, label: 'Subjects' },
-    { href: '/admin-dashboard/assignsubject', icon: <BookMarked size={20} />, label: 'Assign Subject' },
+    {href: '/student-dashboard',icon: <LayoutDashboard size={20} />,label: 'Dashboard'},
+    {href: '/student-dashboard/attendance',icon: <ClipboardCheck size={20} />,label: 'My Attendance'},
+    {href: '/student-dashboard/timetable',icon: <CalendarDays size={20} />,label: 'Time Table'},
+    {href: '/student-dashboard/subjects',icon: <BookOpen size={20} />,label: 'Subjects'}
   ];
   return (
     <div className="w-64 bg-[#0f172a] text-white flex flex-col justify-between">
       <div>
         <div className="p-6">
           <h1 className="text-xl font-bold">SL</h1>
-          <p className="text-sm text-gray-400">Admin Portal</p>
+          <p className="text-sm text-gray-400">Student Portal</p>
         </div>
 
         <nav className="space-y-2 px-4">
