@@ -37,9 +37,8 @@ export default function Login() {
       // Store user data
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
-      localStorage.setItem('username', data.user.username);
-      localStorage.setItem('role', data.user.role);
-      localStorage.setItem('userId', data.user._id);
+      
+ 
       
       if (data.user.linkedId) {
         localStorage.setItem('linkedId', data.user.linkedId);

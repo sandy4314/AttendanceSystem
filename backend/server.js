@@ -13,6 +13,7 @@ app.use(cors({
 
 app.use(express.json());
 
+
 mongoose.connect(process.env.MONGODB_URI)
     .then(async ()=>{
         console.log("Connected to MongoDB");
@@ -28,6 +29,7 @@ const sectionRoutes=require('./routes/sectionRoutes');
 const studentRoutes=require('./routes/studentRoutes');
 const subjectRoutes=require('./routes/subjectRoutes');
 const tsaRoutes=require('./routes/teachersubjectassignRoutes');
+const attendanceRoutes=require('./routes/attendanceRoutes');
 
 app.use('/api/auth',authRoutes);
 app.use('/api/teachers',teacherRoutes);
@@ -37,6 +39,7 @@ app.use('/api/sections',sectionRoutes);
 app.use('/api/students',studentRoutes);
 app.use('/api/subjects',subjectRoutes);
 app.use('/api/assignsubject',tsaRoutes);
+app.use('/api/attendance',attendanceRoutes);
 
 
 const PORT = process.env.PORT || 5000;

@@ -10,15 +10,23 @@ const attendanceController=require('../controllers/attendanceController');
 
 router.use(authMiddleware.protect);
 
-router.post('/',attendanceController.markAttendance);
-
-router.get('/:studentId',attendanceController.getStudentAttendance);
+router.post('/',authMiddleware.restrictTo('teacher'),attendanceController.markAttendance);
 
 router.get(
-  '/me',
-  auth.restrictTo('student'),
-  attendanceController.getMyChildAttendance
+  "/session",
+  authMiddleware.restrictTo("teacher"),
+  attendanceController.getAttendanceBySession
 );
+
+router.put('/:attendanceId',
+  authMiddleware.restrictTo('teacher'),
+  attendanceController.updateAttendance
+);
+
+
+
+
+router.get('/student/:studentId',attendanceController.getStudentAttendance);
 
 
 

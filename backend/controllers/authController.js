@@ -36,7 +36,8 @@ exports.login= async (req,res)=>{
         user: {
             id: user._id,
             username: user.username,
-            role: user.role
+            role: user.role,
+            linkedId:user.linkedId
         }
         });
 
@@ -113,9 +114,6 @@ exports.getUsers=async (req,res)=>{
 }
 
 
-
-
-  
 
 
 

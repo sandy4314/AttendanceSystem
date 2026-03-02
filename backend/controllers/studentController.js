@@ -349,3 +349,98 @@ exports.deleteStudent = async (req, res) => {
     session.endSession();
   }
 };
+
+exports.createMultipleStudents = async (req, res) => {
+  const { students } = req.body;
+
+  if (!students || !Array.isArray(students) || students.length === 0) {
+    return res.status(400).json({
+      success: false,
+      message: "Students array is required"
+    });
+  }
+
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    const createdStudents = [];
+
+    for (let data of students) {
+      const {
+        fullName,
+        rollNo,
+        parentName,
+        motherName,
+        parentMobile,
+        branch,
+        classRef,
+        section
+      } = data;
+
+      if (!fullName || !rollNo || !parentName || !parentMobile || !branch || !classRef || !section) {
+        throw new Error(`Missing fields for rollNo: ${rollNo}`);
+      }
+
+      // Roll number check
+      const existingRoll = await User.findOne({ username: rollNo }).session(session);
+      if (existingRoll) {
+        throw new Error(`Roll number ${rollNo} already exists`);
+      }
+
+      // Validate branch, class, section
+      const branchValidate = await Branch.findById(branch).session(session);
+      if (!branchValidate) throw new Error("Invalid branch");
+
+      const clsValidate = await Class.findById(classRef).session(session);
+      if (!clsValidate) throw new Error("Invalid class");
+
+      const sectionValidate = await Section.findById(section).session(session);
+      if (!sectionValidate) throw new Error("Invalid section");
+
+      // Create student
+      const student = await Student.create([{
+        fullName,
+        rollNo,
+        parentName,
+        motherName,
+        parentMobile,
+        branch,
+        classRef,
+        section
+      }], { session });
+
+      // Create user
+      const user = await User.create([{
+        name: fullName,
+        username: rollNo,
+        password: parentMobile,
+        role: "student",
+        linkedId: student[0]._id
+      }], { session });
+
+      student[0].user = user[0]._id;
+      await student[0].save({ session });
+
+      createdStudents.push(student[0]);
+    }
+
+    await session.commitTransaction();
+    session.endSession();
+
+    res.status(201).json({
+      success: true,
+      message: "Students created successfully",
+      data: createdStudents
+    });
+
+  } catch (err) {
+    await session.abortTransaction();
+    session.endSession();
+
+    res.status(400).json({
+      success: false,
+      message: err.message
+    });
+  }
+};
