@@ -6,7 +6,8 @@ const attendanceSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'TeacherSubjectAssignment',
       required: true
-    },
+    }
+    ,
 
     branch: {
       type: mongoose.Schema.Types.ObjectId,
@@ -75,6 +76,23 @@ attendanceSchema.index(
   { assignment: 1, date: 1, timeSlot: 1 },
   { unique: true }
 );
+
+
+attendanceSchema.index({
+  "students.student": 1,
+  date: 1
+});
+
+attendanceSchema.index({
+  section: 1,
+  date: 1
+});
+
+attendanceSchema.index({
+  section: 1,
+  subject: 1,
+  date: 1
+});
 
 
 module.exports = mongoose.model('Attendance', attendanceSchema);

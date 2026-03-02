@@ -5,7 +5,7 @@ exports.markAttendance = async (req, res) => {
   const { assignmentId, date, timeSlot, description, students } = req.body;
   
   try {
-    if (!assignmentId || !date || !timeSlot || !students) {
+    if (!assignmentId || !date || !timeSlot ||  !Array.isArray(students) ) {
       return res.status(400).json({
         success: false,
         message: 'Missing required fields'
@@ -32,20 +32,6 @@ exports.markAttendance = async (req, res) => {
       });
     }
 
-    // 3️⃣ Prevent duplicate attendance
-    const existingAttendance = await Attendance.findOne({
-      assignment: assignmentId,
-      date,
-      timeSlot
-    });
-
-    if (existingAttendance) {
-      return res.status(400).json({
-        success: false,
-        message: 'Attendance already marked for this session'
-      });
-    }
-
     // 4️⃣ Create attendance document
     const attendance = await Attendance.create({
       assignment: assignmentId,
@@ -67,10 +53,17 @@ exports.markAttendance = async (req, res) => {
     });
 
   } catch (err) {
-    console.error(err);
+    // Handle duplicate index error
+    if (err.code === 11000) {
+      return res.status(400).json({
+        success: false,
+        message: "Attendance already marked for this session"
+      });
+    }
+
     res.status(500).json({
       success: false,
-      message: 'Failed to mark attendance'
+      message: "Server error"
     });
   }
 };
@@ -85,9 +78,8 @@ exports.getStudentAttendance = async (req, res) => {
     })
       .populate('subject', 'subjectName')
       .populate('teacher', 'fullName')
-      .populate('date')
-      .populate('timeslot')
-      .sort({ date: -1 });
+      .sort({ date: -1 })
+      .lean();
 
     res.status(200).json({
       success: true,
