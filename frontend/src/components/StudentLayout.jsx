@@ -1,13 +1,12 @@
 'use client';
-
 import ProtectedRoute from './ProtectedRoute';
-import TeacherSideBar from './TeacherSidebar';
+import StudentSidebar from './StudentSidebar';
 
-export default function TeacherLayout({ children }) {
+export default function StudentLayout({ children }) {
   return (
     <ProtectedRoute>
       <div className="flex min-h-screen bg-gray-100">
-        <TeacherSideBar/>
+        <StudentSidebar />
         <div className="flex-1 p-8 overflow-auto">
           {children}
         </div>
