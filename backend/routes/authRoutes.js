@@ -8,5 +8,4 @@ router.post('/register', authController.register); // admin only later
 router.get('/users',authMiddleware.protect,authMiddleware.restrictTo('admin'),authController.getUsers);
 
 
-
 module.exports = router;

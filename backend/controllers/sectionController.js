@@ -261,4 +261,34 @@ exports.deleteSection = async (req, res) => {
 };
 
 
+exports.getMyInchargeSections = async (req, res) => {
+  try {
+    const sections = await Section.find({
+      sectionIncharge: req.user.linkedId
+    })
+      .populate('branch', 'branchName')
+      .populate('classRef', 'className');
+
+    if(sections.length===0){
+        res.status(200).json({
+            success: true,
+            message:"No sections were assigned for this teacher as Incharge",
+            data:[]
+            });
+    }
+
+    res.status(200).json({
+      success: true,
+      count: sections.length,
+      data: sections
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch sections'
+    });
+  }
+};
 

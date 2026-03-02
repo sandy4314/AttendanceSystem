@@ -12,6 +12,8 @@ exports.markAttendance = async (req, res) => {
       });
     }
 
+    
+
     // 1️⃣ Validate assignment
     const assignment = await TeacherSubjectAssignment.findById(assignmentId);
 
@@ -83,6 +85,8 @@ exports.getStudentAttendance = async (req, res) => {
     })
       .populate('subject', 'subjectName')
       .populate('teacher', 'fullName')
+      .populate('date')
+      .populate('timeslot')
       .sort({ date: -1 });
 
     res.status(200).json({
@@ -228,51 +232,93 @@ exports.getSectionAttendanceAnalytics = async (req, res) => {
 
 
 
-
-exports.updateStudentAttendance = async (req, res) => {
+exports.updateAttendance = async (req, res) => {
   const { attendanceId } = req.params;
-  const { studentId, status } = req.body;
+  const { students } = req.body;
 
   try {
-    if (!['P', 'A'].includes(status)) {
+    if (!students || !Array.isArray(students)) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid status'
+        message: "Invalid students data"
       });
     }
 
-    const updated = await Attendance.findOneAndUpdate(
-      {
-        _id: attendanceId,
-        "students.student": studentId
-      },
-      {
-        $set: {
-          "students.$.status": status
-        }
-      },
-      { new: true }
-    );
+    // Validate all statuses
+    for (let s of students) {
+      if (!["P", "A"].includes(s.status)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid status value"
+        });
+      }
+    }
 
-    if (!updated) {
+    const attendance = await Attendance.findById(attendanceId);
+
+    if (!attendance) {
       return res.status(404).json({
         success: false,
-        message: 'Attendance record not found'
+        message: "Attendance not found"
       });
     }
+
+    // Check teacher ownership
+    if (attendance.teacher.toString() !== req.user.linkedId.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not allowed to edit this attendance"
+      });
+    }
+
+    attendance.students = students;
+
+    await attendance.save();
 
     res.status(200).json({
       success: true,
-      message: 'Attendance updated successfully',
-      data: updated
+      message: "Attendance updated successfully",
+      data: attendance
     });
 
   } catch (err) {
     console.error(err);
     res.status(500).json({
       success: false,
-      message: 'Failed to update attendance'
+      message: "Failed to update attendance"
     });
   }
 };
 
+
+
+exports.getAttendanceBySession = async (req, res) => {
+  const { assignmentId, date, timeSlot } = req.query;
+
+  try {
+    const attendance = await Attendance.findOne({
+      assignment: assignmentId,
+      date,
+      timeSlot
+    });
+
+    if (!attendance) {
+      return res.status(200).json({
+        success: true,
+        exists: false
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      exists: true,
+      data: attendance
+    });
+
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch attendance"
+    });
+  }
+};

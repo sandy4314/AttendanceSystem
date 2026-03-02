@@ -16,7 +16,7 @@ router.delete('/:id', authMiddleware.restrictTo('admin'), tsaController.deleteAs
 
 // Teacher specific routes
 router.get('/me', tsaController.getMyAssignments);
-router.get('/:teacherId', tsaController.getAssignmentsByTeacher);
+router.get('/teacher/:teacherId', tsaController.getAssignmentsByTeacher);
 
 module.exports = router;
 

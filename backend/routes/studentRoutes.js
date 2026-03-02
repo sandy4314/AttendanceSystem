@@ -6,10 +6,11 @@ const studentController = require('../controllers/studentController');
 router.use(authMiddleware.protect);
 
 router.post('/', authMiddleware.restrictTo('admin'), studentController.createStudent);
+router.post("/bulk", studentController.createMultipleStudents);
 router.get('/', authMiddleware.restrictTo('admin'), studentController.getStudents);
 
 router.get('/class/:classId', authMiddleware.restrictTo('admin'), studentController.getStudentsByClass);
-router.get('/section/:sectionId', authMiddleware.restrictTo('admin'), studentController.getStudentsBySection);
+router.get('/section/:sectionId', authMiddleware.restrictTo('admin','teacher'), studentController.getStudentsBySection);
 
 // Dynamic routes - these should come last
 router.route('/:id')

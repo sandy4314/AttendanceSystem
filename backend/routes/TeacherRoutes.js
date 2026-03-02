@@ -4,15 +4,16 @@ const teacherController=require('../controllers/teacherController');
 const authMiddleware=require('../middleware/authMiddleware')
 
 router.use(authMiddleware.protect);
-router.use(authMiddleware.restrictTo('admin'));
+
 router.route('/')
-.get(teacherController.getTeachers)
-.post(teacherController.CreateTeacher);
+.get(authMiddleware.restrictTo('admin'),teacherController.getTeachers)
+.post(authMiddleware.restrictTo('admin'),teacherController.CreateTeacher);
+
 
 router.route('/:id')
-.get(teacherController.getOneTeacher)
-.put(teacherController.updateTeacher)
-.delete(teacherController.deleteTeacher);
+.get(authMiddleware.restrictTo('teacher','admin'),teacherController.getOneTeacher)
+.put(authMiddleware.restrictTo('admin'),teacherController.updateTeacher)
+.delete(authMiddleware.restrictTo('admin'),teacherController.deleteTeacher);
 
 
 

@@ -76,4 +76,5 @@ attendanceSchema.index(
   { unique: true }
 );
 
+
 module.exports = mongoose.model('Attendance', attendanceSchema);

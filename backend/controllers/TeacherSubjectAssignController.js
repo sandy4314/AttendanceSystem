@@ -110,12 +110,15 @@ exports.getAssignmentsByTeacher = async (req, res) => {
     })
       .populate('subject', 'subjectName')
       .populate('classRef', 'className')
-      .populate('section', 'sectionName');
+      .populate('section', 'sectionName')
+      .populate('branch','branchName');
 
-    if (assignments.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: 'No assignments found for this teacher'
+    if (!assignments || assignments.length === 0) {
+      
+      return res.status(200).json({
+        success: true,
+        data: [],
+        message:"No assignments found for this teacher"
       });
     }
 
