@@ -1,5 +1,7 @@
 const Attendance = require('../models/Attendance');
 const TeacherSubjectAssignment = require('../models/TeacherSubjectAssignment');
+const mongoose =require('mongoose');
+
 
 exports.markAttendance = async (req, res) => {
   const { assignmentId, date, timeSlot, description, students } = req.body;
@@ -73,29 +75,65 @@ exports.getStudentAttendance = async (req, res) => {
   const { studentId } = req.params;
 
   try {
-    const attendance = await Attendance.find({
-      "students.student": studentId
-    })
-      .populate('subject', 'subjectName')
-      .populate('teacher', 'fullName')
-      .sort({ date: -1 })
-      .lean();
+    if (!mongoose.Types.ObjectId.isValid(studentId)) {
+      return res.status(400).json({ success: false, message: "Invalid Student ID" });
+    }
+
+    const result = await Attendance.aggregate([
+  
+      {
+        $match: {
+          "students.student": new mongoose.Types.ObjectId(studentId)
+        }
+      },
+      
+      {
+        $lookup: {
+          from: "subjects",          // The name of your subjects collection in MongoDB
+          localField: "subject",    // The field in Attendance document
+          foreignField: "_id",      // The field in Subjects document
+          as: "subjectData"
+        }
+      },
+   
+      { $unwind: "$subjectData" },
+     
+      { $unwind: "$students" },
+      
+
+      {
+        $match: {
+          "students.student": new mongoose.Types.ObjectId(studentId)
+        }
+      },
+      
+      {
+        $project: {
+          _id: 0,
+          date: 1,
+          timeSlot: 1,
+          status: "$students.status",
+          subjectName: "$subjectData.subjectName" // Adjust field name if different in your DB
+        }
+      },
+      { $sort: { date: -1, timeSlot: 1 } }
+    ]);
 
     res.status(200).json({
       success: true,
-      count: attendance.length,
-      data: attendance
+      count: result.length,
+      data: result
     });
 
   } catch (err) {
-    console.error(err);
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch attendance'
+      message: "Failed to fetch attendance",
+      error: err.message
     });
-
   }
 };
+
 
 
 
@@ -235,7 +273,7 @@ exports.updateAttendance = async (req, res) => {
         message: "Invalid students data"
       });
     }
-
+ 
     // Validate all statuses
     for (let s of students) {
       if (!["P", "A"].includes(s.status)) {

@@ -73,7 +73,7 @@ const attendanceSchema = new mongoose.Schema(
 
 // Prevent duplicate attendance for same session
 attendanceSchema.index(
-  { assignment: 1, date: 1, timeSlot: 1 },
+  { section: 1, date: 1, timeSlot: 1 },
   { unique: true }
 );
 
@@ -93,6 +93,7 @@ attendanceSchema.index({
   subject: 1,
   date: 1
 });
+
 
 
 module.exports = mongoose.model('Attendance', attendanceSchema);

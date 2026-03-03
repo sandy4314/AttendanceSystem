@@ -21,6 +21,7 @@ function SidebarItem({ icon, label, href, isActive }) {
   );
 }
 
+
 export default function StudentSidebar() {
   const pathname = usePathname();
   const router = useRouter();
@@ -32,7 +33,7 @@ export default function StudentSidebar() {
 
   const menuItems = [
     {href: '/student-dashboard',icon: <LayoutDashboard size={20} />,label: 'Dashboard'},
-    {href: '/student-dashboard/attendance',icon: <ClipboardCheck size={20} />,label: 'My Attendance'},
+    {href: '/student-dashboard/myattendance',icon: <ClipboardCheck size={20} />,label: 'My Attendance'},
     {href: '/student-dashboard/timetable',icon: <CalendarDays size={20} />,label: 'Time Table'},
     {href: '/student-dashboard/subjects',icon: <BookOpen size={20} />,label: 'Subjects'}
   ];

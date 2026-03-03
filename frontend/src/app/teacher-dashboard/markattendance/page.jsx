@@ -45,17 +45,13 @@ export default function MarkAttendance() {
 
     if (res?.success) {
       setStudents(res.data || []);
-      const initial = {};
-      res.data.forEach(s => initial[s._id] = "P");
-      setAttendance(initial);
+      
     }
 
     setLoadingStudents(false);
   }, []);
 
-  // ==========================
-  // Check Existing Attendance
-  // ==========================
+ 
   const checkExistingAttendance = async () => {
     if (!selectedAssignment || !date || !timeSlot) return;
 
@@ -75,13 +71,27 @@ export default function MarkAttendance() {
       setAttendance(mapped);
       setDescription(existing.description || "");
     }
+
+    else {
+    
+    const initial = {};
+    students.forEach(s => {
+      initial[s._id] = "P";
+    });
+
+    setAttendance(initial);
+    setExistingAttendanceId(null);
+    setDescription("");
+  }
+
+
   };
 
   useEffect(() => {
   if (selectedAssignment && date && timeSlot) {
     checkExistingAttendance();
   }
-}, [selectedAssignment, date, timeSlot]);
+}, [selectedAssignment, date, timeSlot,students]);
 
  
   const presentCount = Object.values(attendance).filter(v => v === "P").length;
@@ -93,6 +103,7 @@ export default function MarkAttendance() {
     students.forEach(s => updated[s._id] = status);
     setAttendance(updated);
   };
+ 
 
 
   const handleSubmit = async () => {
@@ -107,7 +118,7 @@ export default function MarkAttendance() {
     try {
 
       if (existingAttendanceId) {
-        // UPDATE MODE
+        
         await apiRequest(`/attendance/${existingAttendanceId}`, {
           method: "PUT",
           body: JSON.stringify({
@@ -117,8 +128,9 @@ export default function MarkAttendance() {
         });
 
         alert("Attendance updated successfully");
+
       } else {
-        // CREATE MODE
+       
         await apiRequest("/attendance", {
           method: "POST",
           body: JSON.stringify({
@@ -132,6 +144,8 @@ export default function MarkAttendance() {
 
         alert("Attendance marked successfully");
       }
+
+      await checkExistingAttendance();
 
     } catch (err) {
       setError(err.message);
@@ -211,13 +225,21 @@ export default function MarkAttendance() {
       value={timeSlot}
       onChange={(e) => setTimeSlot(e.target.value)}
     >
-      <option value="">Select period</option>
-      <option value="09:00-09:45">09:00 - 09:45</option>
-      <option value="09:45-11:00">09:45 - 11:00</option>
-      <option value="11:15-12:15">11:15 - 12:15</option>
-      <option value="13:30-14:15">01:30 - 02:15</option>
-      <option value="14:15-15:00">02:15 - 03:00</option>
-      <option value="15:15-16:00">03:15 - 04:00</option>
+    <option value="">Select period</option>
+            <option value="09:00-09:45">09:00 - 09:45</option>
+            <option value="09:45-10:30">09:45 - 10:30</option>
+      
+            <option value="10:45-11:30">10:45 - 11:30</option>
+            <option value="11:30-12:15">11:30 - 12:15</option>
+          
+            <option value="13:15-14:00">01:15 - 02:00</option>
+            <option value="14:00-14:45">02:00 - 02:45</option>
+           
+            <option value="15:00-15:45">03:00 - 3:45</option>
+            <option value="15:45-16:30">03:45 - 4:30</option>
+
+            
+
     </select>
   </div>
 
