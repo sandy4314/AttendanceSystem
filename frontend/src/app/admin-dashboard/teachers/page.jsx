@@ -4,7 +4,7 @@ import Layout from '../../../components/Layout';
 import { useState, useEffect } from 'react';
 import { apiRequest } from '../../../services/api';
 import { useRouter } from 'next/navigation';
-import {Plus,Edit,Trash2,Search,X,AlertCircle,Phone,Eye,DollarSign} from 'lucide-react';
+import {Plus,Edit,Trash2,Search,X,AlertCircle,Phone,Eye,IndianRupee} from 'lucide-react';
 
 export default function TeachersPage() {
   const router = useRouter();
@@ -277,7 +277,7 @@ export default function TeachersPage() {
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-900">
                     <div className="flex items-center gap-1">
-                      <DollarSign size={14} className="text-gray-500" />
+                      <IndianRupee size={14} className="text-gray-500" />
                       {teacher.salary ? teacher.salary.toLocaleString() : 'N/A'}
                     </div>
                   </td>
@@ -368,7 +368,7 @@ export default function TeachersPage() {
                     onChange={handleInputChange}
                     required
                     disabled={submitting}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none disabled:bg-gray-100"
+                    className="text-gray-700 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none disabled:bg-gray-100"
                     placeholder="Enter full name"
                   />
                 </div>
@@ -384,7 +384,7 @@ export default function TeachersPage() {
                     onChange={handleInputChange}
                     required
                     disabled={submitting}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none disabled:bg-gray-100"
+                    className="text-gray-700 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none disabled:bg-gray-100"
                     placeholder="Enter phone number"
                   />
                 </div>
@@ -401,7 +401,7 @@ export default function TeachersPage() {
                     min="0"
                     step="1000"
                     disabled={submitting}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none disabled:bg-gray-100"
+                    className="text-gray-700 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none disabled:bg-gray-100"
                     placeholder="Enter salary (optional)"
                   />
                 </div>
@@ -425,7 +425,7 @@ export default function TeachersPage() {
                         onChange={handleInputChange}
                         required={!editingTeacher}
                         disabled={submitting || editingTeacher}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none disabled:bg-gray-100"
+                        className="text-gray-700 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none disabled:bg-gray-100"
                         placeholder="Enter username for login"
                       />
                     </div>
@@ -441,7 +441,7 @@ export default function TeachersPage() {
                         onChange={handleInputChange}
                         required={!editingTeacher}
                         disabled={submitting || editingTeacher}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none disabled:bg-gray-100"
+                        className="text-gray-700 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none disabled:bg-gray-100"
                         placeholder="Enter password"
                       />
                     </div>
@@ -464,14 +464,14 @@ export default function TeachersPage() {
                   type="button"
                   onClick={() => setShowModal(false)}
                   disabled={submitting}
-                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition disabled:opacity-50"
+                  className="text-gray-700 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition disabled:opacity-50"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition disabled:opacity-50 flex items-center gap-2"
+                  className="text-gray-700 px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition disabled:opacity-50 flex items-center gap-2"
                 >
                   {submitting && (
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>

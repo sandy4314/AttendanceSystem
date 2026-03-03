@@ -368,7 +368,7 @@ export default function BranchesPage() {
                     onChange={handleInputChange}
                     required
                     disabled={submitting}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none disabled:bg-gray-100"
+                    className="w-full px-3 py-2 border text-gray-700 border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none disabled:bg-gray-100"
                     placeholder="Enter school name"
                   />
                 </div>
@@ -383,7 +383,7 @@ export default function BranchesPage() {
                     onChange={handleInputChange}
                     required
                     disabled={submitting}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none disabled:bg-gray-100"
+                    className="w-full px-3 py-2 border text-gray-700  border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none disabled:bg-gray-100"
                     placeholder="Enter branch name"
                   />
                 </div>
@@ -397,7 +397,7 @@ export default function BranchesPage() {
                     value={formData.location}
                     onChange={handleInputChange}
                     disabled={submitting}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none disabled:bg-gray-100"
+                    className="w-full px-3 py-2 border text-gray-700 border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none disabled:bg-gray-100"
                     placeholder="Enter location"
                   />
                 </div>
@@ -410,7 +410,7 @@ export default function BranchesPage() {
                     value={formData.status}
                     onChange={handleInputChange}
                     disabled={submitting}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none disabled:bg-gray-100"
+                    className="w-full px-3 py-2 border text-gray-700 border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none disabled:bg-gray-100"
                   >
                     <option value="active">Active</option>
                     <option value="inactive">Inactive</option>
@@ -422,7 +422,7 @@ export default function BranchesPage() {
                   type="button"
                   onClick={() => setShowModal(false)}
                   disabled={submitting}
-                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition disabled:opacity-50"
+                  className="text-gray-700 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition disabled:opacity-50"
                 >
                   Cancel
                 </button>
