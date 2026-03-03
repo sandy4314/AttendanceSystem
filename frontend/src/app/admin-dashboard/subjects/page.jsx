@@ -1,6 +1,6 @@
 'use client';
 
-import AdminLayout from '../../../components/AdminLayout';
+import Layout from '../../../components/Layout';
 import { useState, useEffect } from 'react';
 import { apiRequest } from '../../../services/api';
 import {Plus,Edit,Trash2,Search,X,BookOpen,AlertCircle,Eye,BookMarked,Hash,RefreshCw,Server} from 'lucide-react';
@@ -253,7 +253,7 @@ export default function SubjectsPage() {
   // Loading state with server status
   if (loading || serverStatus === 'checking') {
     return (
-      <AdminLayout>
+      <Layout>
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-center max-w-md p-6 bg-white rounded-lg shadow">
             <div className="flex items-center justify-center space-x-2 mb-4">
@@ -264,13 +264,13 @@ export default function SubjectsPage() {
             </div>
           </div>
         </div>
-      </AdminLayout>
+      </Layout>
     );
   }
   // Server offline state
   if (serverStatus === 'offline') {
     return (
-      <AdminLayout>
+      <Layout>
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-center max-w-2xl p-8 bg-white rounded-lg shadow">
             <Server className="w-16 h-16 text-red-500 mx-auto mb-4" />
@@ -316,11 +316,11 @@ export default function SubjectsPage() {
             </div>
           </div>
         </div>
-      </AdminLayout>
+      </Layout>
     );
   }
   return (
-    <AdminLayout>
+    <Layout>
       {/* HEADER */}
       <div className="flex justify-between items-center mb-6">
         <div>
@@ -607,6 +607,6 @@ export default function SubjectsPage() {
           </div>
         </div>
       )}
-    </AdminLayout>
+    </Layout>
   );
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import AdminLayout from '../../../components/AdminLayout';
+import Layout from '../../../components/Layout';
 import { useState, useEffect } from 'react';
 import { apiRequest } from '../../../services/api';
 import {Building,Plus,Edit,Trash2,Search,X,AlertCircle,Eye,User,ChevronDown} from 'lucide-react';
@@ -333,19 +333,19 @@ export default function SectionsPage() {
 
   if (loading && sections.length === 0) {
     return (
-      <AdminLayout>
+      <Layout>
         <div className="min-h-screen flex items-center justify-center">
           <div className="flex items-center space-x-2">
             <div className="w-4 h-4 border-2 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
             <span className="text-gray-700">Loading sections...</span>
           </div>
         </div>
-      </AdminLayout>
+      </Layout>
     );
   }
 
   return (
-    <AdminLayout>
+    <Layout>
       {/* HEADER */}
       <div className="flex justify-between items-center mb-6">
         <div>
@@ -739,6 +739,6 @@ export default function SectionsPage() {
           </div>
         </div>
       )}
-    </AdminLayout>
+    </Layout>
   );
 }
