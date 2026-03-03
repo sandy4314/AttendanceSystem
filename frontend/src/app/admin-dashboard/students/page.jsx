@@ -1,6 +1,6 @@
 'use client';
 
-import AdminLayout from '../../../components/AdminLayout';
+import Layout from '../../../components/Layout';
 import { useState, useEffect } from 'react';
 import { apiRequest } from '../../../services/api';
 import {Building,Plus,Edit,Trash2,Search,X,BookOpen,AlertCircle,Eye,Phone,UserCircle,ChevronDown,RefreshCw,Copy,CheckCircle,User,Lock,Key} from 'lucide-react';
@@ -503,7 +503,7 @@ export default function StudentsPage() {
 
   if (loading && allStudents.length === 0) {
     return (
-      <AdminLayout>
+      <Layout>
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
             <div className="flex items-center justify-center space-x-2 mb-4">
@@ -523,11 +523,11 @@ export default function StudentsPage() {
             )}
           </div>
         </div>
-      </AdminLayout>
+      </Layout>
     );
   }
   return (
-    <AdminLayout>
+    <Layout>
       {/* HEADER */}
       <div className="flex justify-between items-center mb-6">
         <div>
@@ -1142,6 +1142,6 @@ export default function StudentsPage() {
           </div>
         </div>
       )}
-    </AdminLayout>
+    </Layout>
   );
 }

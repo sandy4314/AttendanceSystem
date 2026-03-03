@@ -1,6 +1,6 @@
 'use client';
 
-import AdminLayout from '../../../components/AdminLayout';
+import Layout from '../../../components/Layout';
 import { useState, useEffect } from 'react';
 import { apiRequest } from '../../../services/api';
 import {BookOpen,Plus,Trash2,Search,X,AlertCircle,RefreshCw,ChevronDown,User,Building,Layers,Grid} from 'lucide-react';
@@ -494,7 +494,7 @@ export default function AssignSubjectPage() {
 
   if (loading && assignments.length === 0) {
     return (
-      <AdminLayout>
+      <Layout>
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
             <div className="flex items-center justify-center space-x-2 mb-4">
@@ -514,12 +514,12 @@ export default function AssignSubjectPage() {
             )}
           </div>
         </div>
-      </AdminLayout>
+      </Layout>
     );
   }
 
   return (
-    <AdminLayout>
+    <Layout>
       {/* HEADER */}
       <div className="flex justify-between items-center mb-6">
         <div>
@@ -920,6 +920,6 @@ export default function AssignSubjectPage() {
           </div>
         </div>
       )}
-    </AdminLayout>
+    </Layout>
   );
 }
