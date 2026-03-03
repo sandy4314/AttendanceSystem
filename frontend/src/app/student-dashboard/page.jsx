@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { apiRequest } from '../../services/api';
 import { useRouter } from 'next/navigation';
 import { User, Phone, BookOpen, Users } from 'lucide-react';
-import StudentLayout from '../../components/StudentLayout';
+import Layout from '../../components/Layout';
 
 export default function StudentDashboard() {
   const router = useRouter();
@@ -60,18 +60,18 @@ export default function StudentDashboard() {
 
   if (loading) {
     return (
-      <StudentLayout>
+      <Layout>
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="text-amber-600 flex items-center space-x-2">
             <div className="w-5 h-5 border-2 border-amber-600 border-t-transparent rounded-full animate-spin"></div>
             <span>Loading dashboard...</span>
           </div>
         </div>
-      </StudentLayout>
+      </Layout>
     );
   }
   return (
-    <StudentLayout>
+    <Layout>
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">
@@ -159,6 +159,6 @@ export default function StudentDashboard() {
           </div>
         </div>      
       </div>
-    </StudentLayout>
+    </Layout>
   );
 }

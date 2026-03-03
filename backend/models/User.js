@@ -19,7 +19,7 @@ const userSchema=new mongoose.Schema(
         },
         role:{
             type:String,
-            enum:['admin','student','teacher','parent'],
+            enum:['admin','student','teacher'],
             required:true
         },
         linkedId:{

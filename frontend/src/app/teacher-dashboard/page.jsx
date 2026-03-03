@@ -1,7 +1,7 @@
 'use client'
 
 import DashBox from "@/components/DashBox"
-import TeacherLayout from "@/components/TeacherLayout"
+import Layout from "@/components/Layout"
 import { useRouter } from "next/navigation";
 import {Building,BookOpen,Layers,Users,GraduationCap,Grid,RefreshCw} from 'lucide-react';
 import { useState,useEffect, use } from "react";
@@ -97,7 +97,7 @@ export default function TeacherDashboard()
 
 if (loading) {
             return (
-              <TeacherLayout>
+              <Layout>
                 <div className="min-h-screen flex items-center justify-center">
                   <div className="text-center">
                     <div className="flex items-center justify-center space-x-2 mb-4">
@@ -107,15 +107,12 @@ if (loading) {
                     <p className="text-sm text-gray-500">Fetching your data</p>
                   </div>
                 </div>
-              </TeacherLayout>
+              </Layout>
             );
-          
         }
     return (
 
-         
-
-    <TeacherLayout>
+    <Layout>
         <div className="flex justify-between items-center mb-6">
         <div>
           <h2 className="text-3xl font-bold text-gray-900">Dashboard</h2>
@@ -145,7 +142,7 @@ if (loading) {
           icon={<Layers className="text-green-500" size={24} />}
           />
         </div>
-    </TeacherLayout>
+    </Layout>
 
 )
 

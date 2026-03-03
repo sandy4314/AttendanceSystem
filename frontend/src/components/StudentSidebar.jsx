@@ -32,9 +32,7 @@ export default function StudentSidebar() {
 
   const menuItems = [
     {href: '/student-dashboard',icon: <LayoutDashboard size={20} />,label: 'Dashboard'},
-    {href: '/student-dashboard/attendance',icon: <ClipboardCheck size={20} />,label: 'My Attendance'},
-    {href: '/student-dashboard/timetable',icon: <CalendarDays size={20} />,label: 'Time Table'},
-    {href: '/student-dashboard/subjects',icon: <BookOpen size={20} />,label: 'Subjects'}
+    {href: '/student-dashboard/attendance',icon: <ClipboardCheck size={20} />,label: 'My Attendance'}
   ];
   return (
     <div className="w-64 bg-[#0f172a] text-white flex flex-col justify-between">
