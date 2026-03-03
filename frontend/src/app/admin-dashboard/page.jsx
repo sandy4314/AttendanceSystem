@@ -1,6 +1,6 @@
 'use client';
-
-import AdminLayout from '../../components/AdminLayout';
+import DashBox from "@/components/DashBox"
+import Layout from '../../components/Layout';
 import { useState, useEffect } from 'react';
 import { apiRequest } from '../../services/api';
 import { useRouter } from 'next/navigation';
@@ -133,7 +133,7 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-      <AdminLayout>
+      <Layout>
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
             <div className="flex items-center justify-center space-x-2 mb-4">
@@ -143,12 +143,12 @@ export default function AdminDashboard() {
             <p className="text-sm text-gray-500">Fetching your data</p>
           </div>
         </div>
-      </AdminLayout>
+      </Layout>
     );
   }
 
   return (
-    <AdminLayout>
+    <Layout>
       {/* HEADER with Refresh Button */}
       <div className="flex justify-between items-center mb-6">
         <div>
@@ -172,38 +172,32 @@ export default function AdminDashboard() {
 
       {/* STATS GRID */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        <StatCard
-          title="Total Branches"
+        <DashBox title="Total Branches"
           value={stats.totalBranches}
           color="border-amber-500"
           icon={<Building className="text-amber-500" size={24} />}
         />
-        <StatCard
-          title="Total Classes"
+        <DashBox title="Total Classes"
           value={stats.totalClasses}
           color="border-blue-500"
           icon={<BookOpen className="text-blue-500" size={24} />}
         />
-        <StatCard
-          title="Total Sections"
+        <DashBox title="Total Sections"
           value={stats.totalSections}
           color="border-green-500"
           icon={<Layers className="text-green-500" size={24} />}
         />
-        <StatCard
-          title="Total Students"
+        <DashBox title="Total Students"
           value={stats.totalStudents}
           color="border-purple-500"
           icon={<GraduationCap className="text-purple-500" size={24} />}
         />
-        <StatCard
-          title="Total Teachers"
+        <DashBox title="Total Teachers"
           value={stats.totalTeachers}
           color="border-orange-500"
           icon={<Users className="text-orange-500" size={24} />}
         />
-        <StatCard
-          title="Active Sessions"
+        <DashBox title="Active Sessions"
           value={stats.activeSessions}
           color="border-red-500"
           icon={<Users className="text-red-500" size={24} />}
@@ -269,21 +263,7 @@ export default function AdminDashboard() {
           </Link>
         </div>
       </div>
-    </AdminLayout>
+    </Layout>
   );
 }
 
-/* Stat Card Component */
-function StatCard({ title, value, color, icon }) {
-  return (
-    <div className={`bg-white p-6 rounded-xl shadow border-l-4 ${color} relative overflow-hidden hover:shadow-lg transition`}>
-      <div className="absolute right-4 top-4 opacity-20">
-        {icon}
-      </div>
-      <p className="text-gray-600 text-sm font-medium">{title}</p>
-      <h3 className="text-3xl font-bold text-gray-900 mt-2">
-        {value}
-      </h3>
-    </div>
-  );
-}

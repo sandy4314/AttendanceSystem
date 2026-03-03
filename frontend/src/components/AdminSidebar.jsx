@@ -40,26 +40,26 @@ export default function AdminSidebar() {
     { href: '/admin-dashboard/subjects', icon: <BookOpen size={20} />, label: 'Subjects' },
     { href: '/admin-dashboard/assignsubject', icon: <BookMarked size={20} />, label: 'Assign Subject' },
   ];
-  return (
-    <div className="w-64 bg-[#0f172a] text-white flex flex-col justify-between">
-      <div>
-        <div className="p-6">
-          <h1 className="text-xl font-bold">SL</h1>
-          <p className="text-sm text-gray-400">Admin Portal</p>
-        </div>
 
-        <nav className="space-y-2 px-4">
-          {menuItems.map((item) => (
-            <SidebarItem
-              key={item.href}
-              icon={item.icon}
-              label={item.label}
-              href={item.href}
-              isActive={pathname === item.href}
-            />
-          ))}
-        </nav>
+  return (
+    <div className="fixed top-0 left-0 w-64 h-screen bg-[#0f172a] text-white flex flex-col">
+      <div className="p-6">
+        <h1 className="text-xl font-bold">SL</h1>
+        <p className="text-sm text-gray-400">Admin Portal</p>
       </div>
+
+      <nav className="flex-1 overflow-y-auto px-4 space-y-2 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent">
+        {menuItems.map((item) => (
+          <SidebarItem
+            key={item.href}
+            icon={item.icon}
+            label={item.label}
+            href={item.href}
+            isActive={pathname === item.href}
+          />
+        ))}
+      </nav>
+
       <div className="p-4">
         <button
           onClick={handleLogout}

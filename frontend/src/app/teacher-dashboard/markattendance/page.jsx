@@ -1,6 +1,6 @@
 'use client';
 
-import TeacherLayout from "@/components/TeacherLayout";
+import Layout from "@/components/Layout";
 import { useEffect, useState, useCallback } from "react";
 import { apiRequest } from "@/services/api";
 
@@ -156,7 +156,7 @@ export default function MarkAttendance() {
 
 
   return (
-    <TeacherLayout>
+    <Layout>
       <div className="p-8 text-black">
 
         <h1 className="text-2xl font-bold mb-6">
@@ -380,6 +380,6 @@ export default function MarkAttendance() {
         </button>
 
       </div>
-    </TeacherLayout>
+    </Layout>
   );
 }

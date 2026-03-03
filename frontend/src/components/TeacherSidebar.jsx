@@ -2,17 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import {
-  LayoutDashboard,
-  Building,
-  BookOpen,
-  Layers,
-  Users,
-  GraduationCap,
-  Grid,
-  BookMarked,
-  LogOut
-} from 'lucide-react';
+import {LayoutDashboard,Building,BookOpen,Layers,Users,GraduationCap,Grid,BookMarked,LogOut} from 'lucide-react';
 
 function SidebarItem({ icon, label, href, isActive }) {
   return (
