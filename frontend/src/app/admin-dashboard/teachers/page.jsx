@@ -471,7 +471,7 @@ export default function TeachersPage() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="text-gray-700 px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition disabled:opacity-50 flex items-center gap-2"
+                  className="text-gray-700 px-4 py-2 bg-amber-500 rounded-lg hover:bg-amber-600 transition disabled:opacity-50 flex items-center gap-2"
                 >
                   {submitting && (
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>

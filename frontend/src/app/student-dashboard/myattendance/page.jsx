@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 // import { apiRequest } from '../../services/api';
 import { useRouter } from 'next/navigation';
 import { User, Phone, BookOpen, Users } from 'lucide-react';
-import StudentLayout from '@/components/StudentLayout';
+import Layout from '@/components/Layout';
 import { apiRequest } from '@/services/api';
 
 
@@ -123,7 +123,7 @@ export default function MyAttendance(){
 
     
     return(
-    <StudentLayout>
+    <Layout>
     <div>
 
 
@@ -211,7 +211,7 @@ export default function MyAttendance(){
             </div>
             
             
-        </StudentLayout>
+        </Layout>
         
     );
 
