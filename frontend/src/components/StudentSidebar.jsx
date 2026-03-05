@@ -7,8 +7,7 @@ import {LayoutDashboard,ClipboardCheck,CalendarDays,BookOpen,LogOut} from 'lucid
 function SidebarItem({ icon, label, href, isActive }) {
   return (
     <Link href={href}>
-      <div
-        className={`flex items-center gap-3 px-4 py-2 rounded-lg cursor-pointer transition ${
+      <div className={`flex items-center gap-3 px-4 py-2 rounded-lg cursor-pointer transition ${
           isActive
             ? 'bg-amber-500 text-white'
             : 'hover:bg-gray-700 text-gray-300'
@@ -20,7 +19,6 @@ function SidebarItem({ icon, label, href, isActive }) {
     </Link>
   );
 }
-
 
 export default function StudentSidebar() {
   const pathname = usePathname();
@@ -35,8 +33,9 @@ export default function StudentSidebar() {
     {href: '/student-dashboard',icon: <LayoutDashboard size={20} />,label: 'Dashboard'},
     {href: '/student-dashboard/myattendance',icon: <ClipboardCheck size={20} />,label: 'My Attendance'}
   ];
+  
   return (
-    <div className="w-64 bg-[#0f172a] text-white flex flex-col justify-between">
+    <div className="fixed top-0 left-0 w-64 h-screen bg-[#0f172a] text-white flex flex-col justify-between">
       <div>
         <div className="p-6">
           <h1 className="text-xl font-bold">SL</h1>
@@ -56,10 +55,7 @@ export default function StudentSidebar() {
         </nav>
       </div>
       <div className="p-4">
-        <button
-          onClick={handleLogout}
-          className="flex items-center gap-2 w-full px-4 py-2 bg-red-500 rounded-lg hover:bg-red-600 transition"
-        >
+        <button onClick={handleLogout} className="flex items-center gap-2 w-full px-4 py-2 bg-red-500 rounded-lg hover:bg-red-600 transition">
           <LogOut size={18} /> Logout
         </button>
       </div>

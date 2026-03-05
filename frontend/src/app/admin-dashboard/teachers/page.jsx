@@ -504,29 +504,29 @@ export default function TeachersPage() {
                 <div className="space-y-3">
                   <div>
                     <p className="text-sm text-gray-500">Full Name</p>
-                    <p className="font-medium">{selectedTeacher.fullName}</p>
+                    <p className="font-medium text-gray-900">{selectedTeacher.fullName}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Phone</p>
-                    <p>{selectedTeacher.phone}</p>
+                    <p className="text-gray-900">{selectedTeacher.phone}</p>
                   </div>
                   {selectedTeacher.salary && (
                     <div>
                       <p className="text-sm text-gray-500">Salary</p>
-                      <p>₹{selectedTeacher.salary.toLocaleString()}</p>
+                      <p className="text-gray-900">₹{selectedTeacher.salary.toLocaleString()}</p>
                     </div>
                   )}
                   <div>
                     <p className="text-sm text-gray-500">Teacher ID</p>
-                    <p className="font-mono text-sm">{selectedTeacher._id}</p>
+                    <p className="font-mono text-sm text-gray-900">{selectedTeacher._id}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Created At</p>
-                    <p>{selectedTeacher.createdAt ? new Date(selectedTeacher.createdAt).toLocaleString() : 'N/A'}</p>
+                    <p className="text-gray-900">{selectedTeacher.createdAt ? new Date(selectedTeacher.createdAt).toLocaleString() : 'N/A'}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Last Updated</p>
-                    <p>{selectedTeacher.updatedAt ? new Date(selectedTeacher.updatedAt).toLocaleString() : 'N/A'}</p>
+                    <p className="text-gray-900">{selectedTeacher.updatedAt ? new Date(selectedTeacher.updatedAt).toLocaleString() : 'N/A'}</p>
                   </div>
                 </div>
               </div>

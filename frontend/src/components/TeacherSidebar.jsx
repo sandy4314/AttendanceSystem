@@ -21,7 +21,7 @@ function SidebarItem({ icon, label, href, isActive }) {
   );
 }
 
-export default function AdminSidebar() {
+export default function TeacherSidebar() {  
   const pathname = usePathname();
   const router = useRouter();
 
@@ -35,8 +35,9 @@ export default function AdminSidebar() {
     { href: '/teacher-dashboard/markattendance', icon: <Building size={20} />, label: 'Mark Attendance' },
     { href: '/teacher-dashboard/myassigns', icon: <BookOpen size={20} />, label: 'My Assigns' },
   ];
+  
   return (
-    <div className="w-64 bg-[#0f172a] text-white flex flex-col justify-between">
+    <div className="fixed top-0 left-0 w-64 h-screen bg-[#0f172a] text-white flex flex-col justify-between">
       <div>
         <div className="p-6">
           <h1 className="text-xl font-bold">SL</h1>
@@ -56,10 +57,7 @@ export default function AdminSidebar() {
         </nav>
       </div>
       <div className="p-4">
-        <button
-          onClick={handleLogout}
-          className="flex items-center gap-2 w-full px-4 py-2 bg-red-500 rounded-lg hover:bg-red-600 transition"
-        >
+        <button onClick={handleLogout} className="flex items-center gap-2 w-full px-4 py-2 bg-red-500 rounded-lg hover:bg-red-600 transition">
           <LogOut size={18} /> Logout
         </button>
       </div>

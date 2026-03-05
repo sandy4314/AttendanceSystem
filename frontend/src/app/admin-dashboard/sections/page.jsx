@@ -693,37 +693,37 @@ export default function SectionsPage() {
                 <div className="space-y-3">
                   <div>
                     <p className="text-sm text-gray-500">Section Name</p>
-                    <p className="font-medium">{selectedSection.sectionName}</p>
+                    <p className="font-medium text-gray-900">{selectedSection.sectionName}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Class</p>
-                    <p>{selectedSection.classRef?.className || 'N/A'}</p>
+                    <p className="text-gray-900">{selectedSection.classRef?.className || 'N/A'}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Branch</p>
                     <div className="flex items-center gap-1">
                       <Building size={14} className="text-gray-500" />
-                      <p>{getBranchName(selectedSection.branch)}</p>
+                      <p className="text-gray-900">{getBranchName(selectedSection.branch)}</p>
                     </div>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Section Teacher</p>
                     <div className="flex items-center gap-1">
                       <User size={14} className="text-gray-500" />
-                      <p>{getTeacherName(selectedSection.sectionIncharge)}</p>
+                      <p className="text-gray-900">{getTeacherName(selectedSection.sectionIncharge)}</p>
                     </div>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Section ID</p>
-                    <p className="font-mono text-sm">{selectedSection._id}</p>
+                    <p className="font-mono text-sm text-gray-900">{selectedSection._id}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Created At</p>
-                    <p>{selectedSection.createdAt ? new Date(selectedSection.createdAt).toLocaleString() : 'N/A'}</p>
+                    <p className="text-gray-900">{selectedSection.createdAt ? new Date(selectedSection.createdAt).toLocaleString() : 'N/A'}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Last Updated</p>
-                    <p>{selectedSection.updatedAt ? new Date(selectedSection.updatedAt).toLocaleString() : 'N/A'}</p>
+                    <p className="text-gray-900">{selectedSection.updatedAt ? new Date(selectedSection.updatedAt).toLocaleString() : 'N/A'}</p>
                   </div>
                 </div>
               </div>

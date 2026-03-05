@@ -556,33 +556,33 @@ export default function ClassesPage() {
                 <div className="space-y-3">
                   <div>
                     <p className="text-sm text-gray-500">Class Name</p>
-                    <p className="font-medium">{selectedClass.className}</p>
+                    <p className="font-medium text-gray-900">{selectedClass.className}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Branch</p>
                     <div className="flex items-center gap-1">
                       <Building size={14} className="text-gray-500" />
-                      <p>{getBranchName(selectedClass.branch)}</p>
+                      <p className="text-gray-900">{getBranchName(selectedClass.branch)}</p>
                     </div>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Class Teacher</p>
                     <div className="flex items-center gap-1">
                       <User size={14} className="text-gray-500" />
-                      <p>{getTeacherName(selectedClass.classIncharge)}</p>
+                      <p className="text-gray-900">{getTeacherName(selectedClass.classIncharge)}</p>
                     </div>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Class ID</p>
-                    <p className="font-mono text-sm">{selectedClass._id}</p>
+                    <p className="font-mono text-sm text-gray-900">{selectedClass._id}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Created At</p>
-                    <p>{selectedClass.createdAt ? new Date(selectedClass.createdAt).toLocaleString() : 'N/A'}</p>
+                    <p className="text-gray-900">{selectedClass.createdAt ? new Date(selectedClass.createdAt).toLocaleString() : 'N/A'}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Last Updated</p>
-                    <p>{selectedClass.updatedAt ? new Date(selectedClass.updatedAt).toLocaleString() : 'N/A'}</p>
+                    <p className="text-gray-900">{selectedClass.updatedAt ? new Date(selectedClass.updatedAt).toLocaleString() : 'N/A'}</p>
                   </div>
                 </div>
               </div>
