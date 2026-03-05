@@ -641,7 +641,7 @@ export default function StudentsPage() {
         <table className="w-full">
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Roll No</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student Name</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Parent Name</th>
@@ -991,8 +991,8 @@ export default function StudentsPage() {
               <div className="bg-gray-50 p-4 rounded-lg">
                 <h4 className="font-semibold text-gray-700 mb-3">Student Information</h4>
                 <div className="space-y-2">
-                  <p><span className="text-gray-500">Name:</span> <span className="font-medium">{newCredentials.fullName}</span></p>
-                  <p><span className="text-gray-500">Roll No:</span> <span className="font-medium">{newCredentials.rollNo}</span></p>
+                  <p><span className="text-black">Name:</span> <span className="font-medium text-gray-500">{newCredentials.fullName}</span></p>
+                  <p><span className="text-black">Roll No:</span> <span className="font-medium text-gray-500">{newCredentials.rollNo}</span></p>
                 </div>
               </div>
               <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
@@ -1001,7 +1001,7 @@ export default function StudentsPage() {
                   <div>
                     <p className="text-sm text-amber-600">Username</p>
                     <div className="flex items-center justify-between bg-white p-2 rounded border border-amber-200">
-                      <code className="font-mono text-sm">{newCredentials.username}</code>
+                      <code className="font-mono text-sm text-gray-500">{newCredentials.username}</code>
                       <button
                         onClick={() => copyToClipboard(newCredentials.username)}
                         className="p-1 text-amber-600 hover:bg-amber-100 rounded transition"
@@ -1014,7 +1014,7 @@ export default function StudentsPage() {
                   <div>
                     <p className="text-sm text-amber-600">Password</p>
                     <div className="flex items-center justify-between bg-white p-2 rounded border border-amber-200">
-                      <code className="font-mono text-sm">{newCredentials.password}</code>
+                      <code className="font-mono text-sm text-gray-500">{newCredentials.password}</code>
                       <button
                         onClick={() => copyToClipboard(newCredentials.password)}
                         className="p-1 text-amber-600 hover:bg-amber-100 rounded transition"

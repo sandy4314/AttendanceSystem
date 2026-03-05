@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { apiRequest } from '../../services/api';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import {Building,BookOpen,Layers,Users,GraduationCap,Grid,RefreshCw} from 'lucide-react';
+import { Building, BookOpen, Layers, Users, GraduationCap, Grid, RefreshCw, BookMarked } from 'lucide-react';
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -16,7 +16,7 @@ export default function AdminDashboard() {
     totalSections: 0,
     totalStudents: 0,
     totalTeachers: 0,
-    activeSessions: 0
+    totalSubjects: 0
   });
 
   const [recentBranches, setRecentBranches] = useState([]);
@@ -34,12 +34,13 @@ export default function AdminDashboard() {
       setError('');
 
       // Fetch all data in parallel for better performance
-      const [branchesRes, teachersRes, studentsRes, classesRes, sectionsRes] = await Promise.allSettled([
+      const [branchesRes, teachersRes, studentsRes, classesRes, sectionsRes, subjectsRes] = await Promise.allSettled([
         apiRequest('/branches'),
         apiRequest('/teachers'),
         apiRequest('/students'),
         apiRequest('/classes'),
-        apiRequest('/sections')
+        apiRequest('/sections'),
+        apiRequest('/subjects')
       ]);
 
       // Process Branches
@@ -51,7 +52,7 @@ export default function AdminDashboard() {
         } else if (Array.isArray(branchesData)) {
           branches = branchesData;
         }
-        
+
         setRecentBranches(branches.slice(0, 2));
         setStats(prev => ({
           ...prev,
@@ -63,13 +64,13 @@ export default function AdminDashboard() {
       if (teachersRes.status === 'fulfilled' && teachersRes.value) {
         const teachersData = teachersRes.value;
         let teachers = [];
-        
+
         if (teachersData.success && Array.isArray(teachersData.data)) {
           teachers = teachersData.data;
         } else if (Array.isArray(teachersData)) {
           teachers = teachersData;
         }
-        
+
         setRecentTeachers(teachers.slice(0, 2));
         setStats(prev => ({ ...prev, totalTeachers: teachers.length }));
       }
@@ -78,13 +79,13 @@ export default function AdminDashboard() {
       if (studentsRes.status === 'fulfilled' && studentsRes.value) {
         const studentsData = studentsRes.value;
         let students = [];
-        
+
         if (studentsData.success && Array.isArray(studentsData.data)) {
           students = studentsData.data;
         } else if (Array.isArray(studentsData)) {
           students = studentsData;
         }
-        
+
         setStats(prev => ({ ...prev, totalStudents: students.length }));
       }
 
@@ -92,13 +93,13 @@ export default function AdminDashboard() {
       if (classesRes.status === 'fulfilled' && classesRes.value) {
         const classesData = classesRes.value;
         let classes = [];
-        
+
         if (classesData.success && Array.isArray(classesData.data)) {
           classes = classesData.data;
         } else if (Array.isArray(classesData)) {
           classes = classesData;
         }
-        
+
         setStats(prev => ({ ...prev, totalClasses: classes.length }));
       }
 
@@ -106,19 +107,29 @@ export default function AdminDashboard() {
       if (sectionsRes.status === 'fulfilled' && sectionsRes.value) {
         const sectionsData = sectionsRes.value;
         let sections = [];
-        
+
         if (sectionsData.success && Array.isArray(sectionsData.data)) {
           sections = sectionsData.data;
         } else if (Array.isArray(sectionsData)) {
           sections = sectionsData;
         }
-        
+
         setStats(prev => ({ ...prev, totalSections: sections.length }));
       }
 
-      // Set active sessions (you can implement this based on your needs)
-      setStats(prev => ({ ...prev, activeSessions: 0 }));
+      // Process Subjects
+      if (subjectsRes.status === 'fulfilled' && subjectsRes.value) {  
+        const subjectsData = subjectsRes.value;  
+        let subjectsList = [];
 
+        if (subjectsData.success && Array.isArray(subjectsData.data)) {
+          subjectsList = subjectsData.data;
+        } else if (Array.isArray(subjectsData)) {
+          subjectsList = subjectsData;
+        }
+
+        setStats(prev => ({ ...prev, totalSubjects: subjectsList.length })); 
+      }
     } catch (err) {
       console.error('Dashboard error:', err);
       setError('Failed to load dashboard data. Please refresh the page.');
@@ -197,10 +208,10 @@ export default function AdminDashboard() {
           color="border-orange-500"
           icon={<Users className="text-orange-500" size={24} />}
         />
-        <DashBox title="Active Sessions"
-          value={stats.activeSessions}
-          color="border-red-500"
-          icon={<Users className="text-red-500" size={24} />}
+        <DashBox title="Total Subjects"
+          value={stats.totalSubjects}
+          color="border-indigo-500"
+          icon={<BookMarked className="text-indigo-500" size={24} />}
         />
       </div>
 
