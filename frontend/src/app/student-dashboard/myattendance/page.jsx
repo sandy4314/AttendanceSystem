@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 // import { apiRequest } from '../../services/api';
 import { useRouter } from 'next/navigation';
 import { User, Phone, BookOpen, Users } from 'lucide-react';
-import StudentLayout from '@/components/StudentLayout';
+import Layout from '@/components/Layout';
 import { apiRequest } from '@/services/api';
 
 
@@ -14,26 +14,7 @@ export default function MyAttendance(){
     const [uniquedates,setUniqueDates]=useState([]);
     const [newdata,setNewData]=useState({})
 
-    // const data=[
-    //     {
-    //         "date": "2026-03-27T00:00:00.000Z",
-    //         "timeSlot": "09:45-10:30",
-    //         "status": "P",
-    //         "subjectName": "Hindi"
-    //     },
-    //     {
-    //         "date": "2026-02-27T00:00:00.000Z",
-    //         "timeSlot": "13:15-14:00",
-    //         "status": "A",
-    //         "subjectName": "Telugu"
-    //     },
-    //     {
-    //         "date": "2026-02-27T00:00:00.000Z",
-    //         "timeSlot": "15:45-16:30",
-    //         "status": "A",
-    //         "subjectName": "Telugu"
-    //     }
-    // ]
+    
      
     useEffect(() => {
         const user = JSON.parse(localStorage.getItem("user"));
@@ -123,7 +104,7 @@ export default function MyAttendance(){
 
     
     return(
-    <StudentLayout>
+    <Layout>
     <div>
 
 
@@ -211,7 +192,7 @@ export default function MyAttendance(){
             </div>
             
             
-        </StudentLayout>
+        </Layout>
         
     );
 
