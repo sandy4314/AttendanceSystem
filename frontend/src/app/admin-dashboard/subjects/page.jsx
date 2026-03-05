@@ -385,7 +385,7 @@ export default function SubjectsPage() {
         <table className="w-full">
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subject Name</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subject Code</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
@@ -569,7 +569,7 @@ export default function SubjectsPage() {
                     <p className="text-sm text-gray-500">Subject Name</p>
                     <div className="flex items-center gap-2 mt-1">
                       <BookMarked size={16} className="text-amber-500" />
-                      <p className="font-medium">{selectedSubject.subjectName}</p>
+                      <p className="font-medium text-gray-900 ">{selectedSubject.subjectName}</p>
                     </div>
                   </div>                 
                   {selectedSubject.subjectCode && (
@@ -577,21 +577,21 @@ export default function SubjectsPage() {
                       <p className="text-sm text-gray-500">Subject Code</p>
                       <div className="flex items-center gap-2 mt-1">
                         <Hash size={16} className="text-gray-500" />
-                        <p className="font-mono">{selectedSubject.subjectCode}</p>
+                        <p className="font-mono text-gray-900">{selectedSubject.subjectCode}</p>
                       </div>
                     </div>
                   )} 
                   <div>
                     <p className="text-sm text-gray-500">Subject ID</p>
-                    <p className="font-mono text-sm">{selectedSubject._id}</p>
+                    <p className="font-mono text-sm text-gray-900">{selectedSubject._id}</p>
                   </div>            
                   <div>
                     <p className="text-sm text-gray-500">Created At</p>
-                    <p>{selectedSubject.createdAt ? new Date(selectedSubject.createdAt).toLocaleString() : 'N/A'}</p>
+                    <p className="text-gray-900">{selectedSubject.createdAt ? new Date(selectedSubject.createdAt).toLocaleString() : 'N/A'}</p>
                   </div>                  
                   <div>
                     <p className="text-sm text-gray-500">Last Updated</p>
-                    <p>{selectedSubject.updatedAt ? new Date(selectedSubject.updatedAt).toLocaleString() : 'N/A'}</p>
+                    <p className="text-gray-900">{selectedSubject.updatedAt ? new Date(selectedSubject.updatedAt).toLocaleString() : 'N/A'}</p>
                   </div>
                 </div>
               </div>
