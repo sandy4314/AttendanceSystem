@@ -4,9 +4,13 @@ import Layout from '../../../components/Layout';
 import { useState, useEffect } from 'react';
 import { apiRequest } from '../../../services/api';
 import {Plus,Edit,Trash2,Lock,Unlock,Search,X,AlertCircle} from 'lucide-react';
+import Pagination from '@/components/Pagination';
+
 
 export default function BranchesPage() {
   const [branches, setBranches] = useState([]);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingBranch, setEditingBranch] = useState(null);
@@ -14,6 +18,7 @@ export default function BranchesPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
 
   // Form state
   const [formData, setFormData] = useState({
@@ -23,28 +28,50 @@ export default function BranchesPage() {
     status: 'active'
   });
 
-  useEffect(() => {
-    fetchBranches();
-  }, []);
+  
 
-  const fetchBranches = async () => {
-    try {
-      setLoading(true);
-      setError('');
-      const response = await apiRequest('/branches');
-      if (response && response.success) {
-        setBranches(response.data || []);
-      } else {
-        setBranches([]);
+  useEffect(() => {
+  const timer = setTimeout(() => {
+    setDebouncedSearch(searchTerm);
+  }, 1000);
+
+  return () => clearTimeout(timer);
+}, [searchTerm]);
+
+
+  useEffect(() => {
+    fetchBranches(page);
+  }, [page,debouncedSearch]);
+
+  
+
+  const fetchBranches = async (pageNumber = 1) => {
+  try {
+    setLoading(true);
+    setError('');
+    let url=`/branches?page=${pageNumber}&limit=5`;
+
+    if (debouncedSearch !== '') {
+        url += `&search=${debouncedSearch}`;
       }
-    } catch (error) {
-      console.error('Error fetching branches:', error);
-      setError('Failed to load branches. Please try again.');
+    const response = await apiRequest(url);
+
+    if (response && response.success) {
+      setBranches(response.data || []);
+      setTotalPages(response.totalPages || 1);
+    } else {
       setBranches([]);
-    } finally {
-      setLoading(false);
     }
-  };
+  } catch (error) {
+    console.error('Error fetching branches:', error);
+    setError('Failed to load branches. Please try again.');
+    setBranches([]);
+  } finally {
+    setLoading(false);
+  }
+};
+
+
 
   const handleInputChange = (e) => {
     setFormData({
@@ -100,11 +127,12 @@ export default function BranchesPage() {
           method: 'POST',
           body: JSON.stringify(formData)
         });
+
       }
 
       if (response && response.success) {
         setSuccessMessage(editingBranch ? 'Branch updated successfully!' : 'Branch created successfully!');
-        await fetchBranches();
+        await fetchBranches(page);
         setTimeout(() => {
           setShowModal(false);
           setSuccessMessage('');
@@ -134,7 +162,7 @@ export default function BranchesPage() {
       });
       if (response && response.success) {
         setSuccessMessage('Branch deactivated successfully!');
-        await fetchBranches();
+        await fetchBranches(page);
         setTimeout(() => setSuccessMessage(''), 3000);
       } else {
         setError(response?.message || 'Deactivation failed');
@@ -159,7 +187,7 @@ export default function BranchesPage() {
         })
       });
       if (response && response.success) {
-        await fetchBranches();
+        await fetchBranches(page);
         setSuccessMessage(`Branch ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully!`);
         setTimeout(() => setSuccessMessage(''), 3000);
       } else {
@@ -182,11 +210,8 @@ export default function BranchesPage() {
   };
 
   // Filter branches based on search
-  const filteredBranches = branches.filter(branch =>
-    branch.schoolName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    branch.branchName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (branch.location && branch.location.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  const filteredBranches = branches;
+
   if (loading) {
     return (
       <Layout>
@@ -246,7 +271,10 @@ export default function BranchesPage() {
           type="text"
           placeholder="Search by school name, branch name, or location..."
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={(e) => {setSearchTerm(e.target.value);
+            setPage(1);
+          }
+        }
           className="w-full pl-10 pr-4 py-2 border border-gray-400 rounded-lg text-black focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none"
         />
       </div>
@@ -268,7 +296,9 @@ export default function BranchesPage() {
             {filteredBranches.length > 0 ? (
               filteredBranches.map((branch, index) => (
                 <tr key={branch._id || index} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 text-sm text-gray-900">{index + 1}</td>
+                  <td className="px-6 py-4 text-sm text-gray-900">
+                                                {(page - 1) * 5 + index + 1}
+                                              </td>
                   <td className="px-6 py-4 text-sm text-gray-900 font-medium">{branch.schoolName}</td>
                   <td className="px-6 py-4 text-sm text-gray-900">{branch.branchName}</td>
                   <td className="px-6 py-4 text-sm text-gray-900">{branch.location || 'Not specified'}</td>
@@ -320,7 +350,14 @@ export default function BranchesPage() {
           </tbody>
         </table>
       </div>
-
+      <div>{/* PAGINATION */}
+        <Pagination
+            page={page}
+            totalPages={totalPages}
+            setPage={setPage}
+          />
+      </div>
+            
       {/* CREATE/EDIT MODAL */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">

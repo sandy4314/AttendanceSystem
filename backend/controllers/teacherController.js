@@ -154,16 +154,83 @@ exports.getOneTeacher=async (req,res)=>{
 };
 
 
-exports.getTeachers= async(req,res)=>{
+exports.getAllTeachers= async(req,res)=>{
     try
     {
         const teachers=await Teacher.find().sort({createdAt: -1})
-        res.json(teachers);
+        if(!teachers){
+            return res.status(404).json({
+                success:true,
+                message:"No Teachers Found"
+            });
+        }
+        
+        res.status(201).json({
+            success:true,
+            message:"",
+            data:teachers
+        });
     }catch(err){
         console.error(err);
         res.status(500).json({message:'server error'});
     }
 }
+
+
+exports.getTeachers =async(req,res)=>{
+    try
+    {
+        const page=parseInt(req.query.page) || 1;
+        const limit=parseInt(req.query.limit) || 5;
+
+        const search=req.query.search;
+
+        const skip=(page-1)*limit;
+
+        
+
+        let filter={};
+        
+        if(search){
+            filter.$expr = {
+                $or: [
+                    { $regexMatch: { input: "$fullName", regex: search, options: "i" } },
+                    { $regexMatch: { input: "$phone", regex: search, options: "i" } },
+                    { $regexMatch: { input: { $toString: "$salary" }, regex: search } }
+                ]
+                };
+
+
+    }
+        const total= await Teacher.countDocuments(filter);
+
+        const teachers= await Teacher.find(filter)
+        .limit(limit)
+        .sort({createdAt:-1})
+        .skip(skip);
+
+        res.status(200).json({
+            success: true,
+            page,
+            limit,
+            total,
+            totalPages: Math.ceil(total / limit),
+            count: teachers.length,
+            data: teachers
+        });
+
+    }catch(err){
+
+        console.error(err);
+        res.status(500).json({
+            success: false,
+            message: "Failed to fetch Teachers"
+            });
+
+
+    }
+}
+
 
 
 

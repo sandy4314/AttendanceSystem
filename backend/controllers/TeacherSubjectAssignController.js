@@ -79,7 +79,7 @@ exports.createAssignment = async (req, res) => {
 
 
 
-exports.getAssignments = async (req, res) => {
+exports.getAllAssignments = async (req, res) => {
   try {
     const assignments = await TeacherSubjectAssignment.find({ isActive: true })
       .populate('teacher', 'fullName')
@@ -99,6 +99,87 @@ exports.getAssignments = async (req, res) => {
     res.status(500).json({ success: false, message: 'Failed to fetch assignments' });
   }
 };
+
+
+
+const mongoose = require("mongoose");
+
+
+exports.getAssignments = async (req, res) => {
+  try {
+
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 5;
+    const skip = (page - 1) * limit;
+
+    const search = req.query.search || "";
+
+    const branchId = req.query.branchId;
+    const classId = req.query.classId;
+    const sectionId = req.query.sectionId;
+
+    let matchStage = { isActive: true };
+
+    // filter by branch/class/section
+    if (branchId && branchId !== "all") {
+      matchStage.branch = new mongoose.Types.ObjectId(branchId);
+    }
+
+    if (classId && classId !== "all") {
+      matchStage.classRef = new mongoose.Types.ObjectId(classId);
+    }
+
+    if (sectionId && sectionId !== "all") {
+      matchStage.section = new mongoose.Types.ObjectId(sectionId);
+    }
+
+    // 🔥 FAST teacher search
+    if (search) {
+
+      const teachers = await Teacher.find({
+        fullName: { $regex: search, $options: "i" }
+      }).select("_id");
+
+      const teacherIds = teachers.map(t => t._id);
+
+      matchStage.teacher = { $in: teacherIds };
+
+    }
+
+    const total = await TeacherSubjectAssignment.countDocuments(matchStage);
+
+    const assignments = await TeacherSubjectAssignment.find(matchStage)
+      .populate("teacher", "fullName")
+      .populate("subject", "subjectName")
+      .populate("branch", "branchName")
+      .populate("classRef", "className")
+      .populate("section", "sectionName")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    res.status(200).json({
+      success: true,
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+      data: assignments
+    });
+
+  } catch (err) {
+
+    console.error(err);
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch assignments"
+    });
+
+  }
+};
+
+
 
 
 /* ================= GET ASSIGNMENTS BY TEACHER ================= */

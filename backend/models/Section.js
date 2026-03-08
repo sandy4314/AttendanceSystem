@@ -28,4 +28,8 @@ const sectionSchema=new mongoose.Schema(
 {timestamps:true}
 );
 
+
+sectionSchema.index({ classRef: 1, sectionName: 1 }, { unique: true });
+
+
 module.exports=mongoose.model('Section',sectionSchema);

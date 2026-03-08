@@ -4,6 +4,7 @@ import Layout from '../../../components/Layout';
 import { useState, useEffect } from 'react';
 import { apiRequest } from '../../../services/api';
 import {Building,Plus,Edit,Trash2,Search,X,AlertCircle,Eye,User,ChevronDown} from 'lucide-react';
+import Pagination from '@/components/Pagination';
 
 export default function SectionsPage() {
   const [sections, setSections] = useState([]);
@@ -19,11 +20,17 @@ export default function SectionsPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
 
   // Filter states
   const [selectedBranch, setSelectedBranch] = useState('all');
   const [selectedClass, setSelectedClass] = useState('all');
   const [availableClasses, setAvailableClasses] = useState([]);
+
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const LIMIT = 5;
+
 
   // Form state
   const [formData, setFormData] = useState({
@@ -34,36 +41,52 @@ export default function SectionsPage() {
   });
 
   useEffect(() => {
-    fetchSections();
-    fetchBranches();
-    fetchTeachers();
-  }, []);
+  fetchSections(page);
+  fetchTeachers();
+}, [page, selectedBranch, selectedClass,debouncedSearch]);
+ 
 
-  useEffect(() => {
-    if (selectedBranch !== 'all') {
-      fetchClassesByBranch(selectedBranch);
-    } else {
-      setAvailableClasses([]);
-    }
-  }, [selectedBranch]);
+useEffect(() => {
+  const timer = setTimeout(() => {
+    setDebouncedSearch(searchTerm);
+  }, 1000);
 
-  useEffect(() => {
-    if (selectedClass !== 'all') {
-      fetchSectionsByClass(selectedClass);
-    } else if (selectedBranch !== 'all') {
-      filterSectionsByBranch();
-    } else {
-      fetchSections();
-    }
-  }, [selectedClass, selectedBranch]);
+  return () => clearTimeout(timer);
+}, [searchTerm]);
 
-  const fetchSections = async () => {
+
+
+
+  
+
+  const fetchSections = async (pageNumber=1) => {
     try {
       setLoading(true);
       setError('');
-      const response = await apiRequest('/sections');
+      
+      let url=`/sections?page=${pageNumber}&limit=${LIMIT}`;
+
+      if (selectedBranch !== "all") {
+      url += `&branchId=${selectedBranch}`;
+    }
+
+      if (selectedClass !== "all") {
+        url += `&classId=${selectedClass}`;
+    }
+
+
+    if (debouncedSearch !== '') {
+        url += `&search=${debouncedSearch}`;
+      }
+
+
+
+
+
+      const response = await apiRequest(url);
       if (response && response.success) {
         setSections(response.data || []);
+        setTotalPages(response.totalPages || 1);
       } else {
         setSections([]);
       }
@@ -76,32 +99,17 @@ export default function SectionsPage() {
     }
   };
 
-  const fetchSectionsByClass = async (classId) => {
-    try {
-      setLoading(true);
-      setError('');
-      const response = await apiRequest(`/sections/class/${classId}`);
-      if (response && response.success) {
-        setSections(response.data || []);
-      } else {
-        setSections([]);
-      }
-    } catch (error) {
-      console.error('Error fetching sections by class:', error);
-      setError('Failed to load sections for this class.');
-      setSections([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+  
+  useEffect(()=>{
 
-  const filterSectionsByBranch = () => {
-    fetchSections();
-  };
+    fetchBranches();
+  },[])
+
+ 
 
   const fetchBranches = async () => {
     try {
-      const response = await apiRequest('/branches');
+      const response = await apiRequest('/branches/all');
       if (response && response.success) {
         setBranches(response.data || []);
       }
@@ -111,18 +119,20 @@ export default function SectionsPage() {
   };
 
   const fetchClassesByBranch = async (branchId) => {
-    try {
-      const response = await apiRequest(`/classes/branch/${branchId}`);
-      if (response && response.success) {
-        setAvailableClasses(response.data || []);
-      } else {
-        setAvailableClasses([]);
-      }
-    } catch (error) {
-      console.error('Error fetching classes by branch:', error);
+  try {
+    const response = await apiRequest(`/classes?branchId=${branchId}&limit=100`);
+
+    if (response && response.success) {
+      setAvailableClasses(response.data || []);
+    } else {
       setAvailableClasses([]);
     }
-  };
+
+  } catch (error) {
+    console.error("Error fetching classes:", error);
+    setAvailableClasses([]);
+  }
+};
 
   const fetchTeachers = async () => {
     try {
@@ -145,7 +155,9 @@ export default function SectionsPage() {
     });
     setError('');
     if (name === 'branch' && value && !editingSection) {
+      
       fetchClassesByBranch(value);
+
       setFormData(prev => ({
         ...prev,
         classRef: ''
@@ -176,9 +188,7 @@ export default function SectionsPage() {
       sectionIncharge: section.sectionIncharge?._id || section.sectionIncharge || ''
     });
     const branchId = section.branch?._id || section.branch;
-    if (branchId) {
-      fetchClassesByBranch(branchId);
-    }
+    
 
     setError('');
     setSuccessMessage('');
@@ -236,11 +246,9 @@ export default function SectionsPage() {
       }
       if (response && response.success) {
         setSuccessMessage(editingSection ? 'Section updated successfully!' : 'Section created successfully!');
-        if (selectedClass !== 'all') {
-          await fetchSectionsByClass(selectedClass);
-        } else {
-          await fetchSections();
-        }
+        await fetchSections();
+
+
         setTimeout(() => {
           setShowModal(false);
           setSuccessMessage('');
@@ -277,11 +285,9 @@ export default function SectionsPage() {
       });
       if (response && response.success) {
         setSuccessMessage('Section deleted successfully!');
-        if (selectedClass !== 'all') {
-          await fetchSectionsByClass(selectedClass);
-        } else {
-          await fetchSections();
-        }
+        
+        await fetchSections();
+        
         setTimeout(() => setSuccessMessage(''), 3000);
       } else {
         setError(response?.message || 'Delete failed');
@@ -293,22 +299,9 @@ export default function SectionsPage() {
   };
 
   // Filter sections based on search and branch filter
-  const filteredSections = sections.filter(section => {
-    if (selectedBranch !== 'all') {
-      const sectionBranchId = section.branch?._id || section.branch;
-      if (sectionBranchId !== selectedBranch) return false;
-    }
-    if (searchTerm) {
-      const searchLower = searchTerm.toLowerCase();
-      return (
-        section.sectionName?.toLowerCase().includes(searchLower) ||
-        section.classRef?.className?.toLowerCase().includes(searchLower) ||
-        section.branch?.branchName?.toLowerCase().includes(searchLower) ||
-        section.sectionIncharge?.fullName?.toLowerCase().includes(searchLower)
-      );
-    }
-    return true;
-  });
+  const filteredSections = sections;
+
+    
 
   const getBranchName = (branch) => {
     if (!branch) return 'N/A';
@@ -391,9 +384,20 @@ export default function SectionsPage() {
           <select
             value={selectedBranch}
             onChange={(e) => {
-              setSelectedBranch(e.target.value);
-              setSelectedClass('all');
+                  const branchId = e.target.value;
+
+                  setSelectedBranch(branchId);
+                  setSelectedClass("all");
+                  setPage(1);
+
+                  if (branchId !== "all") {
+                    fetchClassesByBranch(branchId);
+                  } else {
+                    setAvailableClasses([]);
+                  }
+
             }}
+
             className="w-full pl-3 pr-10 py-2 border border-gray-400 text-black rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none appearance-none bg-white"
           >
             <option value="all">All Branches</option>
@@ -407,12 +411,12 @@ export default function SectionsPage() {
         </div>
 
         {/* Class Filter - Only shown when branch is selected */}
-        {selectedBranch !== 'all' && (
+        
           <div className="relative">
             <select
               value={selectedClass}
               onChange={(e) => setSelectedClass(e.target.value)}
-              className="w-full pl-3 pr-10 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none appearance-none bg-white"
+              className="text-black w-full pl-3 pr-10 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none appearance-none bg-white"
             >
               <option value="all">All Classes in Branch</option>
               {availableClasses.map(cls => (
@@ -423,16 +427,17 @@ export default function SectionsPage() {
             </select>
             <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" size={18} />
           </div>
-        )}
+        
 
         {/* Search Bar */}
         <div className={`relative ${selectedBranch !== 'all' ? 'md:col-span-2' : 'md:col-span-3'}`}>
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
           <input
             type="text"
-            placeholder="Search by section name, class, branch, or teacher..."
+            placeholder="Search by section name.."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) =>{setSearchTerm(e.target.value);setPage(1)}}
+            
             className="w-full pl-10 pr-4 py-2 border border-gray-400 text-black rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none"
           />
         </div>
@@ -455,7 +460,7 @@ export default function SectionsPage() {
             {filteredSections.length > 0 ? (
               filteredSections.map((section, index) => (
                 <tr key={section._id || index} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 text-sm text-gray-900">{index + 1}</td>
+                  <td className="px-6 py-4 text-sm text-gray-900">{(page - 1) * LIMIT + index + 1}</td>
                   <td className="px-6 py-4 text-sm font-medium text-gray-900">{section.sectionName}</td>
                   <td className="px-6 py-4 text-sm text-gray-900">
                     {section.classRef?.className || 'N/A'}
@@ -512,6 +517,11 @@ export default function SectionsPage() {
             )}
           </tbody>
         </table>
+      </div>
+      <div>
+
+              <Pagination page={page} setPage={setPage} totalPages={totalPages}/>
+
       </div>
       {/* CREATE/EDIT MODAL */}
       {showModal && (
@@ -611,7 +621,7 @@ export default function SectionsPage() {
                     required
                     disabled={submitting}
                     className="w-full px-3 py-2 border border-gray-400 text-black rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none disabled:bg-gray-100"
-                    placeholder="e.g., A, B, C, or Morning, Evening"
+                    placeholder="e.g., section-1 section-2"
                   />
                 </div>
                 {/* Section Teacher */}

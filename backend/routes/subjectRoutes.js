@@ -8,7 +8,9 @@ router.use(authMiddleware.protect);
 
 router.route('/')
   .post(authMiddleware.restrictTo('admin'), subjectController.createSubject)
-  .get(subjectController.getSubjects);
+  .get(authMiddleware.restrictTo('admin'),subjectController.getSubjects);
+
+router.get('/all',subjectController.getAllSubjects);
 
 router.route('/:id')
   .get(subjectController.getSubjectById)

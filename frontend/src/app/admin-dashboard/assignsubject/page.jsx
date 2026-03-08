@@ -4,15 +4,15 @@ import Layout from '../../../components/Layout';
 import { useState, useEffect } from 'react';
 import { apiRequest } from '../../../services/api';
 import {BookOpen,Plus,Trash2,Search,X,AlertCircle,RefreshCw,ChevronDown,User,Building,Layers,Grid} from 'lucide-react';
+import Pagination from '@/components/Pagination';
 
 export default function AssignSubjectPage() {
   const [assignments, setAssignments] = useState([]);
-  const [filteredAssignments, setFilteredAssignments] = useState([]);
+
   const [teachers, setTeachers] = useState([]);
   const [subjects, setSubjects] = useState([]);
   const [branches, setBranches] = useState([]);
-  const [classes, setClasses] = useState([]);
-  const [sections, setSections] = useState([]);
+ 
   
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -25,12 +25,22 @@ export default function AssignSubjectPage() {
   const [selectedBranch, setSelectedBranch] = useState('all');
   const [selectedClass, setSelectedClass] = useState('all');
   const [selectedSection, setSelectedSection] = useState('all');
-  const [selectedTeacher, setSelectedTeacher] = useState('all');
-
+  
   // Filtered options
   const [filteredClasses, setFilteredClasses] = useState([]);
   const [filteredSections, setFilteredSections] = useState([]);
 
+  const [availableClasses, setAvailableClasses] = useState([]);
+  const [availableSections, setAvailableSections] = useState([]);
+
+
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+
+  const limit=5;
+  
   // Form state
   const [formData, setFormData] = useState({
     teacher: '',
@@ -42,10 +52,287 @@ export default function AssignSubjectPage() {
 
   // Initial data fetch
   useEffect(() => {
-    fetchInitialData();
-  }, []);
 
-  // Refresh teachers and subjects when modal opens
+  refreshTeachersAndSubjects();
+
+  fetchBranches();
+}, []);
+
+ useEffect(() => {
+  fetchAssignments();
+}, [page, selectedBranch, selectedClass, selectedSection, debouncedSearch]);
+
+  useEffect(() => {
+      const timer = setTimeout(() => {
+        setDebouncedSearch(searchTerm);
+      }, 1000);
+    
+      return () => clearTimeout(timer);
+    }, [searchTerm]);
+
+
+  
+
+  const fetchInitialData = async () => {
+    setLoading(true);
+    try {
+      
+      await fetchAssignments();
+
+    } catch (error) {
+      console.error('Error fetching initial data:', error);
+      setError('Failed to load initial data. Please refresh the page.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
+  const fetchAssignments = async () => {
+    try {
+
+      setError('');
+      setLoading(true);
+
+      let url=`/assignsubject?&page=${page}&limit=${limit}`;
+
+      if (selectedBranch !== "all") {
+        url += `&branchId=${selectedBranch}`;
+      }
+
+      if (selectedClass !== "all") {
+        url += `&classId=${selectedClass}`;
+      }
+
+      if (selectedSection !== "all") {
+        url += `&sectionId=${selectedSection}`;
+      }
+
+      if (debouncedSearch !== '') {
+
+        url += `&search=${debouncedSearch}`;
+        
+      }
+
+      const response = await apiRequest(url);
+      
+        if (response && response.success) {
+
+          setAssignments(response.data);
+          setTotalPages(response.totalPages || 1);
+        } 
+        else
+        {
+          setAssignments([]);
+          setTotalPages(1);
+          
+        }
+      
+    } catch (error) {
+      console.error('Error fetching assignments:', error);
+    }
+    finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchTeachers = async () => {
+    try {
+      const response = await apiRequest('/teachers/all');
+      if (response && response.success){ 
+        setTeachers(response.data);
+      }
+      else{
+        setTeachers([]);
+      }
+    } catch (error) {
+      console.error('Error fetching teachers:', error);
+      setTeachers([]);
+    }
+  };
+
+
+  const fetchSubjects = async () => {
+    try {
+      const response = await apiRequest('/subjects/all');
+     
+      if (response && response.success) {
+        setSubjects(response.data || []);
+        
+      } else {
+        setSubjects([]);
+      }
+    } catch (error) {
+      console.error('Error fetching subjects:', error);
+      setSubjects([]);
+    }
+  };
+
+  
+
+  const fetchBranches = async () => {
+    try {
+      const response = await apiRequest('/branches/all');
+      if (response && response.success) {
+        setBranches(response.data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching branches:', error);
+    }
+  };
+
+
+
+  const fetchClassesByBranch = async (branchId) => {
+    try {
+      const response = await apiRequest(`/classes?branchId=${branchId}`);
+      if (response && response.success) {
+        setAvailableClasses(response.data || []);
+        
+      } else {
+        setAvailableClasses([]);
+        
+      }
+    } catch (error) {
+      console.error("Error fetching classes:", error);
+      setAvailableClasses([]);
+      
+    }
+  };
+
+
+   const fetchSectionsByClass = async (classId) => {
+    try {
+      const response = await apiRequest(`/sections/class/${classId}`);
+      if (response && response.success) {
+        setAvailableSections(response.data || []);
+        
+      } else {
+        setAvailableSections([]);
+        
+      }
+    } catch (error) {
+      console.error("Error fetching sections:", error);
+      setAvailableSections([]);
+      
+    }
+  };
+
+const filterClassesByBranch = async (branchId)=>{
+
+  try
+  {
+    const response=await apiRequest(`/classes?branchId=${branchId}`);
+    if(response && response.success){
+        setFilteredClasses(response.data);
+    }else{
+      setFilteredClasses([]);
+    }
+  }catch(err){
+
+    console.error("Error fetching classes",err);
+    setFilteredClasses([]);
+
+}
+}
+
+
+const filterSectionsByClass = async (classId)=>{
+
+  try
+  {
+    const response = await apiRequest(`/sections/class/${classId}`);
+    if(response && response.success){
+        setFilteredSections(response.data);
+    }else{
+      setFilteredSections([]);
+    }
+  }catch(err){
+
+    console.error("Error fetching sections",err);
+    setFilteredSections([]);
+    
+
+}
+}
+
+
+
+  
+
+  // Update filtered classes when branch changes
+  
+
+  useEffect(() => {
+  const loadClasses = async () => {
+    if (selectedBranch !== "all") {
+      await filterClassesByBranch(selectedBranch);
+    } else {
+      setFilteredClasses([]);
+    }
+
+    setSelectedClass("all");
+    setSelectedSection("all");
+  };
+
+  loadClasses();
+}, [selectedBranch]);
+
+
+
+
+  // Update filtered sections when class changes
+  useEffect(() => {
+  const loadSections = async () => {
+    if (selectedClass !== "all") {
+      await filterSectionsByClass(selectedClass);
+    } else {
+      setFilteredSections([]);
+    }
+
+    setSelectedSection("all");
+  };
+
+  loadSections();
+}, [selectedClass]);
+
+
+
+
+ 
+
+  const handleInputChange = async (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    setError('');
+
+    if (name === 'branch' && value) {
+      setAvailableClasses([]);
+      setAvailableSections([]);
+      setFormData(prev => ({
+        ...prev,
+        classRef: '',
+        section: ''
+      }));
+      if (value) {
+        await fetchClassesByBranch(value);
+      }
+    }
+
+    if (name === 'classRef' && value) {
+      setFormData(prev => ({
+        ...prev,
+        section: ''
+      }));
+      if (value) {
+        await fetchSectionsByClass(value);
+      }
+    }
+  };
+
   useEffect(() => {
     if (showModal) {
       refreshTeachersAndSubjects();
@@ -63,291 +350,7 @@ export default function AssignSubjectPage() {
     }
   };
 
-  const fetchInitialData = async () => {
-    setLoading(true);
-    try {
-      await Promise.all([
-        fetchAssignments(),
-        fetchTeachers(),
-        fetchSubjects(),
-        fetchBranches(),
-        fetchClasses(),
-        fetchSections()
-      ]);
-    } catch (error) {
-      console.error('Error fetching initial data:', error);
-      setError('Failed to load initial data. Please refresh the page.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchAssignments = async () => {
-    try {
-      const response = await apiRequest('/assignsubject');
-      if (response) {
-        if (response.success && Array.isArray(response.data)) {
-          setAssignments(response.data);
-          setFilteredAssignments(response.data);
-        } else if (Array.isArray(response)) {
-          setAssignments(response);
-          setFilteredAssignments(response);
-        } else if (response.data && Array.isArray(response.data)) {
-          setAssignments(response.data);
-          setFilteredAssignments(response.data);
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching assignments:', error);
-    }
-  };
-
-  const fetchTeachers = async () => {
-    try {
-      const response = await apiRequest('/teachers');
-      if (response) {
-        if (Array.isArray(response)) {
-          setTeachers(response);
-        } else if (response.success && Array.isArray(response.data)) {
-          setTeachers(response.data);
-        } else if (response.data && Array.isArray(response.data)) {
-          setTeachers(response.data);
-        } else if (response.teachers && Array.isArray(response.teachers)) {
-          setTeachers(response.teachers);
-        } else {
-          setTeachers([]);
-        }
-      } else {
-        setTeachers([]);
-      }
-    } catch (error) {
-      console.error('Error fetching teachers:', error);
-      setTeachers([]);
-    }
-  };
-
-  const fetchSubjects = async () => {
-    try {
-      const response = await apiRequest('/subjects');
-      if (response) {
-        if (Array.isArray(response)) {
-          setSubjects(response);
-        } else if (response.success && Array.isArray(response.data)) {
-          setSubjects(response.data);
-        } else if (response.data && Array.isArray(response.data)) {
-          setSubjects(response.data);
-        } else if (response.subjects && Array.isArray(response.subjects)) {
-          setSubjects(response.subjects);
-        } else {
-          setSubjects([]);
-        }
-      } else {
-        setSubjects([]);
-      }
-    } catch (error) {
-      console.error('Error fetching subjects:', error);
-      setSubjects([]);
-    }
-  };
-
-  const fetchBranches = async () => {
-    try {
-      const response = await apiRequest('/branches');
-      if (response) {
-        if (Array.isArray(response)) {
-          setBranches(response);
-        } else if (response.success && Array.isArray(response.data)) {
-          setBranches(response.data);
-        } else if (response.data && Array.isArray(response.data)) {
-          setBranches(response.data);
-        } else if (response.branches && Array.isArray(response.branches)) {
-          setBranches(response.branches);
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching branches:', error);
-    }
-  };
-
-  const fetchClasses = async () => {
-    try {
-      const response = await apiRequest('/classes');
-      if (response) {
-        if (Array.isArray(response)) {
-          setClasses(response);
-        } else if (response.success && Array.isArray(response.data)) {
-          setClasses(response.data);
-        } else if (response.data && Array.isArray(response.data)) {
-          setClasses(response.data);
-        } else if (response.classes && Array.isArray(response.classes)) {
-          setClasses(response.classes);
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching classes:', error);
-    }
-  };
-
-  const fetchSections = async () => {
-    try {
-      const response = await apiRequest('/sections');
-      if (response) {
-        if (Array.isArray(response)) {
-          setSections(response);
-        } else if (response.success && Array.isArray(response.data)) {
-          setSections(response.data);
-        } else if (response.data && Array.isArray(response.data)) {
-          setSections(response.data);
-        } else if (response.sections && Array.isArray(response.sections)) {
-          setSections(response.sections);
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching sections:', error);
-    }
-  };
-
-  const fetchClassesByBranch = async (branchId) => {
-    try {
-      const response = await apiRequest(`/classes/branch/${branchId}`);
-      if (response) {
-        if (Array.isArray(response)) {
-          return response;
-        } else if (response.success && Array.isArray(response.data)) {
-          return response.data;
-        } else if (response.data && Array.isArray(response.data)) {
-          return response.data;
-        } else if (response.classes && Array.isArray(response.classes)) {
-          return response.classes;
-        }
-      }
-      return [];
-    } catch (error) {
-      console.error('Error fetching classes by branch:', error);
-      return classes.filter(cls => cls.branch === branchId || cls.branch?._id === branchId);
-    }
-  };
-
-  const fetchSectionsByClass = async (classId) => {
-    try {
-      const response = await apiRequest(`/sections/class/${classId}`);
-      if (response) {
-        if (Array.isArray(response)) {
-          return response;
-        } else if (response.success && Array.isArray(response.data)) {
-          return response.data;
-        } else if (response.data && Array.isArray(response.data)) {
-          return response.data;
-        } else if (response.sections && Array.isArray(response.sections)) {
-          return response.sections;
-        }
-      }
-      return [];
-    } catch (error) {
-      console.error('Error fetching sections by class:', error);
-      return sections.filter(sec => sec.class === classId || sec.class?._id === classId);
-    }
-  };
-
-  // Update filtered classes when branch changes
-  useEffect(() => {
-    if (selectedBranch !== 'all') {
-      const filtered = classes.filter(cls => 
-        cls.branch === selectedBranch || cls.branch?._id === selectedBranch
-      );
-      setFilteredClasses(filtered);
-    } else {
-      setFilteredClasses(classes);
-    }
-    setSelectedClass('all');
-    setSelectedSection('all');
-  }, [selectedBranch, classes]);
-
-  // Update filtered sections when class changes
-  useEffect(() => {
-    if (selectedClass !== 'all') {
-      const filtered = sections.filter(sec => 
-        sec.classRef === selectedClass || sec.classRef?._id === selectedClass
-      );
-      setFilteredSections(filtered);
-    } else {
-      setFilteredSections(sections);
-    }
-    setSelectedSection('all');
-  }, [selectedClass, sections]);
-
-  // Apply filters
-  useEffect(() => {
-    if (!loading && assignments.length > 0) {
-      applyFilters();
-    }
-  }, [selectedBranch, selectedClass, selectedSection, selectedTeacher, assignments]);
-
-  const applyFilters = () => {
-    let filtered = [...assignments];
-    
-    if (selectedBranch !== 'all') {
-      filtered = filtered.filter(assignment => {
-        const branchId = assignment.branch?._id || assignment.branch;
-        return branchId === selectedBranch;
-      });
-    }
-    
-    if (selectedClass !== 'all') {
-      filtered = filtered.filter(assignment => {
-        const classId = assignment.classRef?._id || assignment.classRef;
-        return classId === selectedClass;
-      });
-    }
-    
-    if (selectedSection !== 'all') {
-      filtered = filtered.filter(assignment => {
-        const sectionId = assignment.section?._id || assignment.section;
-        return sectionId === selectedSection;
-      });
-    }
-
-    if (selectedTeacher !== 'all') {
-      filtered = filtered.filter(assignment => {
-        const teacherId = assignment.teacher?._id || assignment.teacher;
-        return teacherId === selectedTeacher;
-      });
-    }
-    setFilteredAssignments(filtered);
-  };
-
-  const handleInputChange = async (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-    setError('');
-
-    if (name === 'branch' && value) {
-      setFormData(prev => ({
-        ...prev,
-        classRef: '',
-        section: ''
-      }));
-      const branchClasses = await fetchClassesByBranch(value);
-      setFilteredClasses(branchClasses);
-    }
-
-    if (name === 'classRef' && value) {
-      setFormData(prev => ({
-        ...prev,
-        section: ''
-      }));
-      const classSections = await fetchSectionsByClass(value);
-      setFilteredSections(classSections);
-    }
-  };
-
-  const handleTeacherChange = (e) => {
-    const { value } = e.target;
-    setSelectedTeacher(value);
-  };
+  
 
   const openCreateModal = async () => {
     await refreshTeachersAndSubjects();
@@ -454,18 +457,8 @@ export default function AssignSubjectPage() {
     fetchInitialData();
   };
 
-  // Search filter
-  const searchedAssignments = filteredAssignments.filter(assignment => {
-    if (!searchTerm) return true;
-    const searchLower = searchTerm.toLowerCase();
-    return (
-      assignment.teacher?.fullName?.toLowerCase().includes(searchLower) ||
-      assignment.subject?.subjectName?.toLowerCase().includes(searchLower) ||
-      assignment.branch?.branchName?.toLowerCase().includes(searchLower) ||
-      assignment.classRef?.className?.toLowerCase().includes(searchLower) ||
-      assignment.section?.sectionName?.toLowerCase().includes(searchLower)
-    );
-  });
+  
+  
 
   const getTeacherName = (teacher) => {
     if (!teacher) return 'N/A';
@@ -622,35 +615,16 @@ export default function AssignSubjectPage() {
           <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" size={18} />
         </div>
 
-        {/* Teacher Filter */}
-        <div className="relative">
-          <select
-            value={selectedTeacher}
-            onChange={handleTeacherChange}
-            className="w-full pl-3 pr-10 py-2 border border-gray-300 text-black rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none appearance-none bg-white"
-          >
-            <option value="all">All Teachers</option>
-            {teachers.length > 0 ? (
-              teachers.map(teacher => (
-                <option key={teacher._id} value={teacher._id}>
-                  {teacher.fullName}
-                </option>
-              ))
-            ) : (
-              <option value="" disabled>No teachers available</option>
-            )}
-          </select>
-          <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" size={18} />
-        </div>
+        
 
         {/* Search Bar */}
         <div className="relative md:col-span-2">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
           <input
             type="text"
-            placeholder="Search by teacher, subject, branch, class, section..."
+            placeholder="Search by teacher.."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => {setSearchTerm(e.target.value);setPage(1)}}
             className="w-full pl-10 pr-4 py-2 border border-gray-300 text-black rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none"
           />
         </div>
@@ -671,10 +645,10 @@ export default function AssignSubjectPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {searchedAssignments.length > 0 ? (
-              searchedAssignments.map((assignment, index) => (
+            {assignments.length > 0 ? (
+              assignments.map((assignment, index) => (
                 <tr key={assignment._id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 text-sm text-gray-900">{index + 1}</td>
+                  <td className="px-6 py-4 text-sm text-gray-900">{(page - 1) * limit + index + 1}</td>
                   <td className="px-6 py-4 text-sm text-gray-900">
                     <div className="flex items-center gap-1">
                       <User size={16} className="text-gray-500" />
@@ -717,6 +691,10 @@ export default function AssignSubjectPage() {
             )}
           </tbody>
         </table>
+      </div>
+
+      <div>
+        <Pagination totalPages={totalPages} setPage={setPage} page={page}/>
       </div>
 
       {/* CREATE ASSIGNMENT MODAL */}
@@ -807,8 +785,8 @@ export default function AssignSubjectPage() {
                     disabled={submitting || !formData.branch}
                   >
                     <option value="">Choose a class</option>
-                    {filteredClasses.length > 0 ? (
-                      filteredClasses.map(cls => (
+                    {availableClasses.length > 0 ? (
+                      availableClasses.map(cls => (
                         <option key={cls._id} value={cls._id}>
                           {cls.className}
                         </option>
@@ -836,8 +814,8 @@ export default function AssignSubjectPage() {
                     disabled={submitting || !formData.classRef}
                   >
                     <option value="">Choose a section</option>
-                    {filteredSections.length > 0 ? (
-                      filteredSections.map(section => (
+                    {availableSections.length > 0 ? (
+                      availableSections.map(section => (
                         <option key={section._id} value={section._id}>
                           {section.sectionName}
                         </option>

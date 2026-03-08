@@ -10,6 +10,8 @@ router.delete('/:id', authMiddleware.restrictTo('admin'), branchController.delet
 
 
 router.get('/', branchController.getBranches);
+router.get('/all',branchController.getAllBranches);
 router.get('/:id', branchController.getBranchById);
+
 
 module.exports = router;

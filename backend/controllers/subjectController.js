@@ -46,7 +46,7 @@ exports.createSubject= async(req,res)=>{
 
 //Get All Subjects
 
-exports.getSubjects = async (req, res) => {
+exports.getAllSubjects = async (req, res) => {
   try {
     const subjects = await Subject.find().sort({ subjectName: 1 });
 
@@ -64,6 +64,56 @@ exports.getSubjects = async (req, res) => {
     });
   }
 };
+
+
+exports.getSubjects = async (req,res)=>{
+  try
+  {
+    const page=parseInt(req.query.page);
+    const limit=parseInt(req.query.limit);
+    const search=req.query.search;
+
+    const skip=(page-1)*limit;
+
+    const filter={};
+
+    if(search){
+            filter.$or = [
+              { subjectName: { $regex: search, $options: "i" } },
+              { subjectCode: { $regex: search, $options: "i" } },
+             
+            ];
+
+    }
+    const total = await Subject.countDocuments(filter);
+
+
+    const subjects=await Subject.find(filter)
+    .limit(limit)
+    .skip(skip)
+    .sort({createdAt:-1});
+
+    res.status(200).json({
+            success: true,
+            page,
+            limit,
+            total,
+            totalPages: Math.ceil(total / limit),
+            count: subjects.length,
+            data: subjects
+        });
+
+    
+  }
+  catch(err){
+    console.error(err);
+        res.status(500).json({
+            success:false,
+            message:"Failed to fetch Subjects"
+        });
+
+  }
+}
 
 
 exports.getSubjectById = async (req, res) => {

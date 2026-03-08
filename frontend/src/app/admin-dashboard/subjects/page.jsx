@@ -4,6 +4,7 @@ import Layout from '../../../components/Layout';
 import { useState, useEffect } from 'react';
 import { apiRequest } from '../../../services/api';
 import {Plus,Edit,Trash2,Search,X,BookOpen,AlertCircle,Eye,BookMarked,Hash,RefreshCw,Server} from 'lucide-react';
+import Pagination from '@/components/Pagination';
 
 export default function SubjectsPage() {
   const [subjects, setSubjects] = useState([]);
@@ -16,8 +17,14 @@ export default function SubjectsPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
-  const [serverStatus, setServerStatus] = useState('checking'); // 'checking', 'online', 'offline'
-  
+
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+
+  const limit=5;
+
   // Form state
   const [formData, setFormData] = useState({
     subjectName: '',
@@ -25,85 +32,54 @@ export default function SubjectsPage() {
   });
 
   useEffect(() => {
-    checkServerStatus();
-  }, []);
+    fetchSubjects();
+  }, [page,debouncedSearch]);
 
+
+ 
   useEffect(() => {
-    if (serverStatus === 'online') {
-      fetchSubjects();
-    }
-  }, [serverStatus]); 
+  const timer = setTimeout(() => {
+    setDebouncedSearch(searchTerm);
+  }, 1000);
 
-  const checkServerStatus = async () => {
-    try {
-      setServerStatus('checking');
-      // Try to access the server root or a simple endpoint
-      const response = await fetch('http://localhost:5000/api/subjects', {
-        method: 'HEAD',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }).catch(() => null);
-      
-      if (response) {
-        setServerStatus('online');
-        fetchSubjects();
-      } else {
-        setServerStatus('offline');
-        setError('Cannot connect to backend server. Please make sure the server is running on port 5000.');
-        setLoading(false);
-      }
-    } catch (error) {
-      setServerStatus('offline');
-      setError('Cannot connect to backend server. Please make sure the server is running on port 5000.');
-      setLoading(false);
-    }
-  };
+  return () => clearTimeout(timer);
+}, [searchTerm]);
+
+
 
   const fetchSubjects = async () => {
     try {
       setLoading(true);
       setError('');
       console.log('Fetching subjects from API...');
-      const response = await apiRequest('/subjects');
+      let url=`/subjects?page=${page}&limit=${limit}`;
+      if (debouncedSearch !== '') {
+        url += `&search=${debouncedSearch}`;
+      }
+      const response = await apiRequest(url);
       console.log('Subjects API response:', response);
       
-      // Handle different response formats
-      if (response && response.success === true) {
-        setSubjects(response.data || []);
-      } else if (Array.isArray(response)) {
-        setSubjects(response);
-      } else if (response && response.data && Array.isArray(response.data)) {
+     
+      if (response && response.success) {
         setSubjects(response.data);
+        setTotalPages(response.totalPages || 1);
       } else {
         console.warn('Unexpected response format:', response);
         setSubjects([]);
       }
     } catch (error) {
       console.error('Error fetching subjects:', error);
-      if (error.message.includes('404')) {
-        setError('Subjects API endpoint not found. Please check if subject routes are properly configured in the backend.');
-      } else if (error.message.includes('connect to server')) {
-        setError('Cannot connect to backend server. Please ensure it\'s running on port 5000.');
-      } else if (error.message.includes('HTML')) {
-        setError('Server returned HTML instead of JSON. The API endpoint may be incorrect or the server is misconfigured.');
-      } else if (error.message.includes('401')) {
-        setError('Authentication failed. Please login again.');
-        setTimeout(() => {
-          localStorage.clear();
-          router.push('/');
-        }, 2000);
-      } else {
-        setError(error.message || 'Failed to load subjects. Please try again.');
-      }
-      setSubjects([]);
-    } finally {
+       setSubjects([]);
+        
+      } 
+     
+     finally {
       setLoading(false);
     }
   };
 
   const handleRetry = () => {
-    checkServerStatus();
+    
   };
 
   const handleInputChange = (e) => {
@@ -240,18 +216,10 @@ export default function SubjectsPage() {
   };
 
   // Filter subjects based on search
-  const filteredSubjects = subjects.filter(subject => {
-    if (searchTerm) {
-      const searchLower = searchTerm.toLowerCase();
-      return (
-        subject.subjectName?.toLowerCase().includes(searchLower) ||
-        (subject.subjectCode && subject.subjectCode.toLowerCase().includes(searchLower))
-      );
-    }
-    return true;
-  });
+  const filteredSubjects = subjects;
+
   // Loading state with server status
-  if (loading || serverStatus === 'checking') {
+  if (loading ) {
     return (
       <Layout>
         <div className="min-h-screen flex items-center justify-center">
@@ -259,7 +227,7 @@ export default function SubjectsPage() {
             <div className="flex items-center justify-center space-x-2 mb-4">
               <div className="w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
               <span className="text-gray-700">
-                {serverStatus === 'checking' ? 'Checking server connection...' : 'Loading subjects...'}
+                Loading subjects...
               </span>
             </div>
           </div>
@@ -267,58 +235,7 @@ export default function SubjectsPage() {
       </Layout>
     );
   }
-  // Server offline state
-  if (serverStatus === 'offline') {
-    return (
-      <Layout>
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="text-center max-w-2xl p-8 bg-white rounded-lg shadow">
-            <Server className="w-16 h-16 text-red-500 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Server Connection Error</h2>
-            <p className="text-gray-600 mb-6">
-              Cannot connect to the backend server. Please make sure:
-            </p>
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-left mb-6">
-              <ol className="list-decimal list-inside space-y-2 text-red-700">
-                <li>Your backend server is running on <code className="bg-red-100 px-2 py-0.5 rounded">http://localhost:5000</code></li>
-                <li>Run this command in your backend directory:</li>
-              </ol>
-              <pre className="bg-red-100 p-3 rounded text-xs mt-2 overflow-x-auto">
-                cd D:\AttendanceSystem\backend
-                node server.js
-              </pre>
-            </div>
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-left mb-6">
-              <p className="font-medium text-amber-800 mb-2">🔧 Backend Configuration Check:</p>
-              <p className="text-amber-700 text-sm mb-2">1. Verify subjectRoutes.js exists:</p>
-              <pre className="bg-amber-100 p-2 rounded text-xs mb-2">
-                D:\AttendanceSystem\backend\routes\subjectRoutes.js
-              </pre>             
-              <p className="text-amber-700 text-sm mb-2">2. Check server.js has this line:</p>
-              <pre className="bg-amber-100 p-2 rounded text-xs">
-                const subjectRoutes = require('./routes/subjectRoutes');
-                app.use('/api/subjects', subjectRoutes);
-              </pre>
-            </div>           
-            <div className="flex gap-2 justify-center">
-              <button
-                onClick={handleRetry}
-                className="flex items-center gap-2 px-6 py-3 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition"
-              >
-                <RefreshCw size={18} /> Retry Connection
-              </button>    
-              <button
-                onClick={() => window.location.reload()}
-                className="px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition"
-              >
-                Refresh Page
-              </button>
-            </div>
-          </div>
-        </div>
-      </Layout>
-    );
-  }
+ 
   return (
     <Layout>
       {/* HEADER */}
@@ -376,9 +293,10 @@ export default function SubjectsPage() {
           type="text"
           placeholder="Search by subject name or code..."
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={(e) => {setSearchTerm(e.target.value);setPage(1)}}
           className="w-full pl-10 pr-4 py-2 border border-gray-300 text-black rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none"
         />
+        
       </div>
       {/* SUBJECTS TABLE */}
       <div className="bg-white rounded-xl shadow overflow-hidden">
@@ -395,7 +313,7 @@ export default function SubjectsPage() {
             {filteredSubjects.length > 0 ? (
               filteredSubjects.map((subject, index) => (
                 <tr key={subject._id || index} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 text-sm text-gray-900">{index + 1}</td>
+                  <td className="px-6 py-4 text-sm text-gray-900">{(page - 1) * limit + index + 1}</td>
                   <td className="px-6 py-4 text-sm font-medium text-gray-900">
                     <div className="flex items-center gap-2">
                       <BookMarked size={16} className="text-amber-500" />
@@ -450,7 +368,17 @@ export default function SubjectsPage() {
             )}
           </tbody>
         </table>
+
       </div>
+
+      <div>
+              <Pagination
+                  page={page}
+                  totalPages={totalPages}
+                  setPage={setPage}
+                />
+      </div>
+
       {/* CREATE/EDIT MODAL */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 overflow-y-auto">

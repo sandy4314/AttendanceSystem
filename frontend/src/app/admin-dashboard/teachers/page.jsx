@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { apiRequest } from '../../../services/api';
 import { useRouter } from 'next/navigation';
 import {Plus,Edit,Trash2,Search,X,AlertCircle,Phone,Eye,IndianRupee} from 'lucide-react';
+import Pagination from '@/components/Pagination';
 
 export default function TeachersPage() {
   const router = useRouter();
@@ -18,7 +19,13 @@ export default function TeachersPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  
+
+  const limit=5;
   // Form state - matching backend schema
   const [formData, setFormData] = useState({
     fullName: '',
@@ -28,30 +35,50 @@ export default function TeachersPage() {
     password: ''
   });
 
+  
   useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+
+  useEffect(()=>{
     fetchTeachers();
-  }, []);
+  },[page,debouncedSearch])
 
   const fetchTeachers = async () => {
-    try {
-      setLoading(true);
-      setError('');
-      const response = await apiRequest('/teachers');
-      if (response && Array.isArray(response)) {
-        setTeachers(response);
-      } else if (response && response.success) {
-        setTeachers(response.data || []);
-      } else {
-        setTeachers([]);
+  try {
+
+    setLoading(true);
+    setError("");
+    let url=`/teachers?page=${page}&limit=${limit}`;
+
+    if (debouncedSearch !== '') {
+        url += `&search=${debouncedSearch}`;
       }
-    } catch (error) {
-      console.error('Error fetching teachers:', error);
-      setError('Failed to load teachers. Please try again.');
+    const response = await apiRequest(url);
+
+    if (response?.success) {
+      setTeachers(response.data || []);
+      setTotalPages(response.totalPages || 1);
+    } else {
       setTeachers([]);
-    } finally {
-      setLoading(false);
     }
-  };
+
+  } catch (error) {
+
+    console.error(error);
+    setError("Failed to load teachers");
+
+  } finally {
+
+    setLoading(false);
+
+  }
+};
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -182,13 +209,11 @@ export default function TeachersPage() {
       setError(error.message || 'Error deleting teacher. Please try again.');
     }
   };
+  
 
   // Filter teachers based on search
-  const filteredTeachers = teachers.filter(teacher =>
-    teacher.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    teacher.phone?.includes(searchTerm) ||
-    (teacher.salary && teacher.salary.toString().includes(searchTerm))
-  );
+  const filteredTeachers = teachers;
+  
   if (loading) {
     return (
       <Layout>
@@ -246,7 +271,7 @@ export default function TeachersPage() {
           type="text"
           placeholder="Search by name, phone, or salary..."
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={(e) => {setSearchTerm(e.target.value);setPage(1)}}
           className="w-full pl-10 pr-4 py-2 border border-gray-400 text-black rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none"
         />
       </div>
@@ -267,7 +292,7 @@ export default function TeachersPage() {
             {filteredTeachers.length > 0 ? (
               filteredTeachers.map((teacher, index) => (
                 <tr key={teacher._id || index} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 text-sm text-gray-900">{index + 1}</td>
+                  <td className="px-6 py-4 text-sm text-gray-900">{(page - 1) * limit + index + 1}</td>
                   <td className="px-6 py-4 text-sm font-medium text-gray-900">{teacher.fullName}</td>
                   <td className="px-6 py-4 text-sm text-gray-900">
                     <div className="flex items-center gap-1">
@@ -317,6 +342,10 @@ export default function TeachersPage() {
             )}
           </tbody>
         </table>
+      </div>
+
+      <div>
+        <Pagination page={page} totalPages={totalPages} setPage={setPage} />
       </div>
 
       {/* CREATE/EDIT MODAL */}

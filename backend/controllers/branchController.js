@@ -6,7 +6,7 @@ exports.createBranch=async(req,res)=>{
     {
         const existingBranch=await Branch.findOne({branchName:branchName})
         if(existingBranch){
-            return res.status(500).json({
+            return res.status(400).json({
                 success:false,
                 message:"Branch already exists"
             })
@@ -39,27 +39,83 @@ catch(err){
 }
 
 
-exports.getBranches = async (req,res)=>{
-    try
-    {
-        const branches=await Branch.find().sort({createdAt:-1});
-        
-        res.status(200).json({
-            success:true,
-            count:branches.length,
-            data:branches
-        });
+exports.getBranches = async (req, res) => {
+  try {
+
+    // get page and limit from query
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 5;
+
+    // skip calculation
+    const skip = (page - 1) * limit;
+
+    const search = req.query.search;
+
+    const filter={}
+
+    
+      if(search){
+            filter.$or = [
+              { branchName: { $regex: search, $options: "i" } },
+              { schoolName: { $regex: search, $options: "i" } },
+              { location: { $regex: search, $options: "i" } }
+            ];
 
     }
-    catch(err){
-        console.error(err);
-        res.status(500).json({
-            success:false,
-            message:"Failed to fetch branches"
-        });
+    // total count
+    const total = await Branch.countDocuments(filter);
 
-    }
-}
+    
+
+    // paginated data
+    const branches = await Branch.find(filter)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    res.status(200).json({
+      success: true,
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+      count: branches.length,
+      data: branches
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch branches"
+    });
+  }
+};
+
+
+
+exports.getAllBranches = async (req, res) => {
+  try {
+
+    const branches = await Branch.find({ status: "active" })
+      .select("branchName schoolName")
+      .sort({ branchName: 1 });
+
+    res.status(200).json({
+      success: true,
+      count: branches.length,
+      data: branches
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch branches"
+    });
+  }
+};
+
 
 
 
@@ -78,7 +134,7 @@ exports.getBranchById= async(req,res)=>{
         }
 
         res.status(200).json({
-            success:false,
+            success:true,
             data:branch
         })
     }
@@ -109,9 +165,9 @@ exports.updateBranch = async (req, res) => {
       });
     }
 
-    // Update only if branch is active
+    
     const branch = await Branch.findOneAndUpdate(
-      { _id: req.params.id, status: "active" },
+      { _id: req.params.id},
       { schoolName, branchName, location,status },
       { new: true }
     );

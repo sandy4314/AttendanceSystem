@@ -134,7 +134,7 @@ exports.createStudent = async (req, res) => {
 
 //Get All Students
 
-exports.getStudents = async (req, res) => {
+exports.getAllStudents = async (req, res) => {
   try {
     const students = await Student.find()
       .populate('branch', 'branchName')
@@ -156,6 +156,88 @@ exports.getStudents = async (req, res) => {
     });
   }
 };
+
+
+exports.getStudents=async(req,res)=>{
+
+    try
+    {
+        const page=parseInt(req.query.page) || 1;
+        const limit=parseInt(req.query.limit);
+        const branchId=req.query.branchId;
+        const classId=req.query.classId;
+        const sectionId=req.query.sectionId;
+        const search=req.query.search;
+
+        const skip=(page-1) * limit;
+
+        let filter = {};
+
+        if (branchId && branchId !== "all") {
+          filter.branch = branchId;
+        }
+
+        if (classId && classId !== "all") {
+          filter.classRef = classId;
+        }
+
+        if(sectionId && sectionId!="all"){
+          filter.section=sectionId;
+        }
+
+              
+        if (search) {
+          filter.$or = [
+            { fullName: { $regex: search, $options: "i" } },
+            { rollNo: { $regex: search, $options: "i" } },
+            { parentName: { $regex: search, $options: "i" } },
+            { parentMobile: { $regex: search, $options: "i" } }
+          ];
+        }
+
+
+        const total = await Student.countDocuments(filter);
+
+        const students= await Student.find(filter)
+                .populate('branch','branchName')
+                .populate('classRef','className')
+                .populate('section','sectionName')
+                
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(limit);
+
+
+        if(!students){
+          return res.status(404).json({
+            success:false,
+            messgae:"No students found"
+          });
+
+        }
+
+        res.status(200).json({
+          success: true,
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+          count: students.length,
+          data: students
+    });
+
+
+      }catch(err){
+
+        console.error(err);
+        res.status(500).json({
+            success:false,
+            message:"Failed to fetch Sections"
+        });
+
+      }
+
+}
 
 //Get Student by Id
 

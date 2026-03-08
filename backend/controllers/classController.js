@@ -58,34 +58,66 @@ exports.createClass=async(req,res)=>{
     }
 }
 
-exports.getClasses= async(req,res)=>{
-    try
-    {
-        const classes = await Class.find()
-        .populate('branch','branchName')
-        .populate('classIncharge','fullName');
-        res.status(200).json({
-            success: true,
-            count: classes.length,
-            data:classes
-            }); 
 
+exports.getClasses = async (req, res) => {
+  try {
 
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 5;
+    const branchId = req.query.branchId;
+
+    const search=req.query.search;
+
+    const skip = (page - 1) * limit;
+
+    let filter = {};
+
+    // filter by branch if provided
+    if (branchId && branchId !== "all") {
+      filter.branch = branchId;
     }
-    catch (err) {
+
+    if (search) {
+          filter.className = { $regex: search, $options: "i" };
+        }
+
+
+
+    const total = await Class.countDocuments(filter);
+
+    const classes = await Class.find(filter)
+      .populate("branch", "branchName")
+      .populate("classIncharge", "fullName")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    res.status(200).json({
+      success: true,
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+      count: classes.length,
+      data: classes
+    });
+
+  } catch (err) {
     console.error(err);
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch classes'
+      message: "Failed to fetch classes"
     });
-}
+  }
+};
 
-}
 
 exports.getClassesByBranch = async (req, res) => {
   try {
+    const limit=parseInt(req.query.limit) || 100;
     const classes = await Class.find({ branch: req.params.branchId })
-      .populate('classIncharge', 'fullName');
+      .populate('classIncharge', 'fullName')
+      .limit(limit);
 
     res.status(200).json({
       success: true,

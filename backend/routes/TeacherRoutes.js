@@ -9,6 +9,8 @@ router.route('/')
 .get(authMiddleware.restrictTo('admin'),teacherController.getTeachers)
 .post(authMiddleware.restrictTo('admin'),teacherController.CreateTeacher);
 
+router.get('/all',authMiddleware.restrictTo('admin'),teacherController.getAllTeachers);
+
 
 router.route('/:id')
 .get(authMiddleware.restrictTo('teacher','admin'),teacherController.getOneTeacher)

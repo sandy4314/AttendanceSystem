@@ -9,6 +9,7 @@ router.use(authMiddleware.protect);
 
 // Admin only routes
 router.post('/', authMiddleware.restrictTo('admin'), tsaController.createAssignment);
+router.get('/all', authMiddleware.restrictTo('admin'), tsaController.getAllAssignments);
 router.get('/', authMiddleware.restrictTo('admin'), tsaController.getAssignments);
 
 // Delete assignment (admin only)

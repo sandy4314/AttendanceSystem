@@ -4,6 +4,7 @@ import Layout from '../../../components/Layout';
 import { useState, useEffect } from 'react';
 import { apiRequest } from '../../../services/api';
 import {Building,Plus,Edit,Trash2,Search,X,AlertCircle,Eye,User,ChevronDown} from 'lucide-react';
+import Pagination from '@/components/Pagination';
 
 export default function ClassesPage() {
   const [classes, setClasses] = useState([]);
@@ -19,67 +20,96 @@ export default function ClassesPage() {
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [selectedBranch, setSelectedBranch] = useState('all');
-  
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+
   // Form state
   const [formData, setFormData] = useState({
     className: '',
     branchId: '',
     teacherId: ''
   });
+
   useEffect(() => {
-    fetchClasses();
+  const timer = setTimeout(() => {
+    setDebouncedSearch(searchTerm);
+  }, 1000);
+
+  return () => clearTimeout(timer);
+}, [searchTerm]);
+
+
+  useEffect(() => {
+   
     fetchBranches();
     fetchTeachers();
   }, []);
+
   useEffect(() => {
-    if (selectedBranch !== 'all') {
-      fetchClassesByBranch(selectedBranch);
+  fetchClasses(page);
+}, [page, selectedBranch,debouncedSearch]);
+
+
+  
+
+  const fetchClasses = async (pageNumber = 1) => {
+  try {
+    setLoading(true);
+    setError("");
+
+    let url = `/classes?page=${pageNumber}&limit=5`;
+
+    if (selectedBranch !== "all") {
+      url += `&branchId=${selectedBranch}`;
+    }
+
+    if (debouncedSearch !== '') {
+        url += `&search=${debouncedSearch}`;
+      }
+
+    
+    const response = await apiRequest(url);
+    console.log(response);
+
+    if (response && response.success) {
+      setClasses(response.data || []);
+      setTotalPages(response.totalPages || 1);
     } else {
-      fetchClasses();
-    }
-  }, [selectedBranch]);
-
-  const fetchClasses = async () => {
-    try {
-      setLoading(true);
-      setError('');
-      const response = await apiRequest('/classes');
-      if (response && response.success) {
-        setClasses(response.data || []);
-      } else {
-        setClasses([]);
-      }
-    } catch (error) {
-      console.error('Error fetching classes:', error);
-      setError('Failed to load classes. Please try again.');
       setClasses([]);
-    } finally {
-      setLoading(false);
     }
-  };
 
-  const fetchClassesByBranch = async (branchId) => {
-    try {
-      setLoading(true);
-      setError('');
-      const response = await apiRequest(`/classes/branch/${branchId}`);
-      if (response && response.success) {
-        setClasses(response.data || []);
-      } else {
-        setClasses([]);
-      }
-    } catch (error) {
-      console.error('Error fetching classes by branch:', error);
-      setError('Failed to load classes for this branch.');
-      setClasses([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+  } catch (error) {
+    console.error("Error fetching classes:", error);
+    setError("Failed to load classes.");
+  } finally {
+    setLoading(false);
+  }
+};
+
+  // const fetchClassesByBranch = async (branchId) => {
+  //   try {
+  //     setLoading(true);
+  //     setError('');
+  //     const response = await apiRequest(`/classes/branch/${branchId}`);
+  //     if (response && response.success) {
+  //       setClasses(response.data || []);
+  //     } else {
+  //       setClasses([]);
+  //     }
+  //   } catch (error) {
+  //     console.error('Error fetching classes by branch:', error);
+  //     setError('Failed to load classes for this branch.');
+  //     setClasses([]);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   const fetchBranches = async () => {
     try {
-      const response = await apiRequest('/branches');
+      const response = await apiRequest('/branches/all');
       if (response && response.success) {
         setBranches(response.data || []);
       }
@@ -180,11 +210,7 @@ export default function ClassesPage() {
       }
       if (response && response.success) {
         setSuccessMessage(editingClass ? 'Class updated successfully!' : 'Class created successfully!');
-        if (selectedBranch !== 'all') {
-          await fetchClassesByBranch(selectedBranch);
-        } else {
-          await fetchClasses();
-        }
+        await fetchClasses(page);
         setTimeout(() => {
           setShowModal(false);
           setSuccessMessage('');
@@ -218,11 +244,8 @@ export default function ClassesPage() {
       if (response && response.success) {
         setSuccessMessage('Class deleted successfully!');
         
-        if (selectedBranch !== 'all') {
-          await fetchClassesByBranch(selectedBranch);
-        } else {
-          await fetchClasses();
-        }
+        await fetchClasses(page);
+        
         setTimeout(() => setSuccessMessage(''), 3000);
       } else {
         setError(response?.message || 'Delete failed');
@@ -234,11 +257,7 @@ export default function ClassesPage() {
   };
 
   // Filter classes based on search
-  const filteredClasses = classes.filter(cls => 
-    cls.className?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    cls.branch?.branchName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    cls.classIncharge?.fullName?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredClasses = classes;
 
   // Get branch name by ID
   const getBranchName = (branch) => {
@@ -310,7 +329,9 @@ export default function ClassesPage() {
         <div className="relative md:w-64">
           <select
             value={selectedBranch}
-            onChange={(e) => setSelectedBranch(e.target.value)}
+            onChange={(e) => {setSelectedBranch(e.target.value);
+              setPage(1)}
+            }
             className="w-full pl-3 pr-10 py-2 border border-gray-400 text-black rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none appearance-none bg-white"
           >
             <option value="all">All Branches</option>
@@ -327,9 +348,9 @@ export default function ClassesPage() {
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
           <input
             type="text"
-            placeholder="Search by class name, branch, or class teacher..."
+            placeholder="Search by class name.."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => {setSearchTerm(e.target.value);setPage(1)}}
             className="w-full pl-10 pr-4 py-2 border border-gray-400 rounded-lg text-black focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none"
           />
         </div>
@@ -350,7 +371,7 @@ export default function ClassesPage() {
             {filteredClasses.length > 0 ? (
               filteredClasses.map((cls, index) => (
                 <tr key={cls._id || index} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 text-sm text-gray-900">{index + 1}</td>
+                  <td className="px-6 py-4 text-sm text-gray-900">{(page - 1) * 5 + index + 1}</td>
                   <td className="px-6 py-4 text-sm font-medium text-gray-900">{cls.className}</td>
                   <td className="px-6 py-4 text-sm text-gray-900">
                     <div className="flex items-center gap-1">
@@ -402,7 +423,14 @@ export default function ClassesPage() {
             )}
           </tbody>
         </table>
+
       </div>
+      
+      <Pagination
+            page={page}
+            totalPages={totalPages}
+            setPage={setPage}
+          />
       {/* CREATE/EDIT MODAL */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 overflow-y-auto">

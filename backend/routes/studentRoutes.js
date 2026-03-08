@@ -7,6 +7,7 @@ router.use(authMiddleware.protect);
 
 router.post('/', authMiddleware.restrictTo('admin'), studentController.createStudent);
 router.post("/bulk", studentController.createMultipleStudents);
+router.get('/all', authMiddleware.restrictTo('admin'), studentController.getAllStudents);
 router.get('/', authMiddleware.restrictTo('admin'), studentController.getStudents);
 
 router.get('/class/:classId', authMiddleware.restrictTo('admin'), studentController.getStudentsByClass);

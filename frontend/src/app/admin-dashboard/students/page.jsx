@@ -4,13 +4,11 @@ import Layout from '../../../components/Layout';
 import { useState, useEffect } from 'react';
 import { apiRequest } from '../../../services/api';
 import {Building,Plus,Edit,Trash2,Search,X,BookOpen,AlertCircle,Eye,Phone,UserCircle,ChevronDown,RefreshCw,Copy,CheckCircle,User,Lock,Key} from 'lucide-react';
+import Pagination from '@/components/Pagination';
 
 export default function StudentsPage() {
   const [students, setStudents] = useState([]);
-  const [allStudents, setAllStudents] = useState([]);
-  const [branches, setBranches] = useState([]);
-  const [classes, setClasses] = useState([]);
-  const [sections, setSections] = useState([]);
+  const [branches, setBranches] = useState([]); 
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
@@ -33,6 +31,14 @@ export default function StudentsPage() {
   const [filteredClasses, setFilteredClasses] = useState([]);
   const [filteredSections, setFilteredSections] = useState([]);
 
+  // Pagination states
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalStudents, setTotalStudents] = useState(0);
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+
+  const LIMIT = 10;
+
   // Form state for create/edit modal - MATCHING BACKEND SCHEMA
   const [formData, setFormData] = useState({
     fullName: '',
@@ -52,17 +58,29 @@ export default function StudentsPage() {
   // Initial data fetch
   useEffect(() => {
     fetchInitialData();
+    fetchBranches();
   }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+    }, 1000);
+  
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // Fetch students when page or filters change
+  useEffect(() => {
+    if (!loading) {
+      fetchStudents();
+    }
+  }, [page, selectedBranch, selectedClass, selectedSection,debouncedSearch]);
 
   const fetchInitialData = async () => {
     setLoading(true);
     try {
-      await Promise.all([
-        fetchAllStudents(),
-        fetchBranches(),
-        fetchClasses(),
-        fetchSections()
-      ]);
+      
+      await fetchStudents();
     } catch (error) {
       console.error('Error fetching initial data:', error);
       setError('Failed to load initial data. Please refresh the page.');
@@ -72,82 +90,91 @@ export default function StudentsPage() {
   };
 
   // Update filtered classes when branch changes
+  
+
   useEffect(() => {
-    if (selectedBranch !== 'all') {
-      const filtered = classes.filter(cls =>
-        cls.branch === selectedBranch || cls.branch?._id === selectedBranch
-      );
-      setFilteredClasses(filtered);
+  const loadClasses = async () => {
+    if (selectedBranch !== "all") {
+      await filterClassesByBranch(selectedBranch);
     } else {
-      setFilteredClasses(classes);
+      setFilteredClasses([]);
     }
-    setSelectedClass('all');
-    setSelectedSection('all');
-  }, [selectedBranch, classes]);
+
+    setSelectedClass("all");
+    setSelectedSection("all");
+  };
+
+  loadClasses();
+}, [selectedBranch]);
+
+
+
 
   // Update filtered sections when class changes
   useEffect(() => {
-    if (selectedClass !== 'all') {
-      const filtered = sections.filter(sec =>
-        sec.classRef === selectedClass || sec.classRef?._id === selectedClass
-      );
-      setFilteredSections(filtered);
+  const loadSections = async () => {
+    if (selectedClass !== "all") {
+      await filterSectionsByClass(selectedClass);
     } else {
-      setFilteredSections(sections);
+      setFilteredSections([]);
     }
-    setSelectedSection('all');
-  }, [selectedClass, sections]);
 
-  // Apply filters when they change
-  useEffect(() => {
-    if (!loading && allStudents.length > 0) {
-      applyFilters();
-    }
-  }, [selectedBranch, selectedClass, selectedSection, allStudents]);
-  const fetchAllStudents = async () => {
+    setSelectedSection("all");
+  };
+
+  loadSections();
+}, [selectedClass]);
+
+
+  const fetchStudents = async () => {
     try {
-      const response = await apiRequest('/students');
-      if (response && response.success) {
-        setAllStudents(response.data || []);
-        setStudents(response.data || []);
-      } else if (Array.isArray(response)) {
-        setAllStudents(response);
-        setStudents(response);
+      setError('');
+      
+      let url = `/students?page=${page}&limit=${LIMIT}`;
+
+      if (selectedBranch !== "all") {
+        url += `&branchId=${selectedBranch}`;
       }
-    } catch (error) {
-      console.error('Error fetching all students:', error);
-      throw error;
+
+      if (selectedClass !== "all") {
+        url += `&classId=${selectedClass}`;
+      }
+
+      if (selectedSection !== "all") {
+        url += `&sectionId=${selectedSection}`;
+      }
+
+      if (debouncedSearch !== '') {
+
+        url += `&search=${debouncedSearch}`;
+        
+      }
+
+
+
+      const response = await apiRequest(url);
+      if (response && response.success) {
+        setStudents(response.data || []);
+       
+        setTotalPages(response.totalPages || 1);
+        setTotalStudents(response.total || 0);
+
+      } else {
+        setStudents([]);
+    
+        setTotalPages(1);
+        setTotalStudents(0);
+      }
+    } catch (err) {
+      console.error('Error fetching students:', err);
+      setError('Failed to fetch students');
     }
   };
 
-  const applyFilters = () => {
-    let filtered = [...allStudents];
-    if (selectedBranch !== 'all') {
-      filtered = filtered.filter(student => {
-        const branchId = student.branch?._id || student.branch;
-        return branchId === selectedBranch;
-      });
-    }
-
-    if (selectedClass !== 'all') {
-      filtered = filtered.filter(student => {
-        const classId = student.classRef?._id || student.classRef;
-        return classId === selectedClass;
-      });
-    }
-
-    if (selectedSection !== 'all') {
-      filtered = filtered.filter(student => {
-        const sectionId = student.section?._id || student.section;
-        return sectionId === selectedSection;
-      });
-    }
-    setStudents(filtered);
-  };
-
-  const fetchBranches = async () => {
+  
+const fetchBranches = async () => {
     try {
-      const response = await apiRequest('/branches');
+      const response = await apiRequest('/branches/all');
       if (response && response.success) {
         setBranches(response.data || []);
       }
@@ -156,51 +183,80 @@ export default function StudentsPage() {
     }
   };
 
-  const fetchClasses = async () => {
-    try {
-      const response = await apiRequest('/classes');
-      if (response && response.success) {
-        setClasses(response.data || []);
-      }
-    } catch (error) {
-      console.error('Error fetching classes:', error);
-    }
-  };
 
-  const fetchSections = async () => {
-    try {
-      const response = await apiRequest('/sections');
-      if (response && response.success) {
-        setSections(response.data || []);
-      }
-    } catch (error) {
-      console.error('Error fetching sections:', error);
-    }
-  };
 
   const fetchClassesByBranch = async (branchId) => {
     try {
-      const response = await apiRequest(`/classes/branch/${branchId}`);
+      const response = await apiRequest(`/classes?branchId=${branchId}`);
       if (response && response.success) {
-        return response.data || [];
+        setAvailableClasses(response.data || []);
+        
+      } else {
+        setAvailableClasses([]);
+        
       }
-      return [];
     } catch (error) {
-      console.error('Error fetching classes by branch:', error);
-      return classes.filter(cls => cls.branch === branchId || cls.branch?._id === branchId);
+      console.error("Error fetching classes:", error);
+      setAvailableClasses([]);
+      
     }
   };
+
+const filterClassesByBranch = async (branchId)=>{
+
+  try
+  {
+    const response=await apiRequest(`/classes?branchId=${branchId}`);
+    if(response && response.success){
+        setFilteredClasses(response.data);
+    }else{
+      setFilteredClasses([]);
+    }
+  }catch(err){
+
+    console.error("Error fetching classes",error);
+    setFilteredClasses([]);
+
+}
+}
+
+
+const filterSectionsByClass = async (classId)=>{
+
+  try
+  {
+    const response = await apiRequest(`/sections/class/${classId}`);
+    if(response && response.success){
+        setFilteredSections(response.data);
+    }else{
+      setFilteredSections([]);
+    }
+  }catch(err){
+
+    console.error("Error fetching sections",err);
+    setFilteredSections([]);
+    
+
+}
+}
+
+
+
 
   const fetchSectionsByClass = async (classId) => {
     try {
       const response = await apiRequest(`/sections/class/${classId}`);
       if (response && response.success) {
-        return response.data || [];
+        setAvailableSections(response.data || []);
+        
+      } else {
+        setAvailableSections([]);
+        
       }
-      return [];
     } catch (error) {
-      console.error('Error fetching sections by class:', error);
-      return sections.filter(sec => sec.class === classId || sec.class?._id === classId);
+      console.error("Error fetching sections:", error);
+      setAvailableSections([]);
+      
     }
   };
 
@@ -211,6 +267,7 @@ export default function StudentsPage() {
       [name]: value
     }));
     setError('');
+    
     if (name === 'branch' && value) {
       setAvailableClasses([]);
       setAvailableSections([]);
@@ -220,10 +277,10 @@ export default function StudentsPage() {
         section: ''
       }));
       if (value) {
-        const branchClasses = await fetchClassesByBranch(value);
-        setAvailableClasses(branchClasses);
+        await fetchClassesByBranch(value);
       }
     }
+    
     if (name === 'classRef' && value) {
       setAvailableSections([]);
       setFormData(prev => ({
@@ -231,8 +288,7 @@ export default function StudentsPage() {
         section: ''
       }));
       if (value) {
-        const classSections = await fetchSectionsByClass(value);
-        setAvailableSections(classSections);
+        await fetchSectionsByClass(value);
       }
     }
   };
@@ -255,11 +311,13 @@ export default function StudentsPage() {
     setSuccessMessage('');
     setShowModal(true);
   };
+
   const openEditModal = async (student) => {
     setEditingStudent(student);
     const branchId = student.branch?._id || student.branch;
     const classId = student.classRef?._id || student.classRef;
     const sectionId = student.section?._id || student.section;
+    
     setFormData({
       fullName: student.fullName || '',
       rollNo: student.rollNo || '',
@@ -270,18 +328,19 @@ export default function StudentsPage() {
       classRef: classId || '',
       section: sectionId || ''
     });
+    
     if (branchId) {
-      const branchClasses = await fetchClassesByBranch(branchId);
-      setAvailableClasses(branchClasses);
+      await fetchClassesByBranch(branchId);
     }
     if (classId) {
-      const classSections = await fetchSectionsByClass(classId);
-      setAvailableSections(classSections);
+      await fetchSectionsByClass(classId);
     }
+    
     setError('');
     setSuccessMessage('');
     setShowModal(true);
   };
+
   const openDetailsModal = (student) => {
     setSelectedStudent(student);
     setShowDetailsModal(true);
@@ -301,11 +360,13 @@ export default function StudentsPage() {
     setShowCredentialsModal(true);
     setCopied(false);
   };
+
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
+
   const validateForm = () => {
     if (!editingStudent) {
       if (!formData.branch) {
@@ -321,27 +382,33 @@ export default function StudentsPage() {
         return false;
       }
     }
+    
     if (!formData.fullName?.trim()) {
       setError('Full name is required');
       return false;
     }
+    
     if (!formData.rollNo?.trim()) {
       setError('Roll number is required');
       return false;
     }
+    
     if (!formData.parentName?.trim()) {
       setError('Parent name is required');
       return false;
     }
+    
     if (!formData.parentMobile?.trim()) {
       setError('Parent mobile number is required');
       return false;
     }
+    
     const mobileRegex = /^[0-9]{10}$/;
     if (!mobileRegex.test(formData.parentMobile.replace(/\D/g, ''))) {
       setError('Please enter a valid 10-digit mobile number');
       return false;
     }
+    
     return true;
   };
 
@@ -350,11 +417,14 @@ export default function StudentsPage() {
     if (!validateForm()) {
       return;
     }
+    
     setSubmitting(true);
     setError('');
     setSuccessMessage('');
+    
     try {
       let response;
+      
       if (editingStudent) {
         const updateData = {
           fullName: formData.fullName.trim(),
@@ -362,13 +432,15 @@ export default function StudentsPage() {
           motherName: formData.motherName?.trim() || '',
           parentMobile: formData.parentMobile.trim()
         };
+        
         response = await apiRequest(`/students/${editingStudent._id}`, {
           method: 'PUT',
           body: JSON.stringify(updateData)
         });
+        
         if (response && response.success) {
           setSuccessMessage('Student updated successfully!');
-          await fetchAllStudents();
+          await fetchStudents();
           setTimeout(() => {
             setShowModal(false);
             setSuccessMessage('');
@@ -385,13 +457,16 @@ export default function StudentsPage() {
           classRef: formData.classRef,
           section: formData.section
         };
+        
         response = await apiRequest('/students', {
           method: 'POST',
           body: JSON.stringify(createData)
         });
+        
         if (response && response.success) {
           setSuccessMessage('Student created successfully!');
-          await fetchAllStudents();
+          await fetchStudents();
+          
           // Get the newly created student with populated user
           const newStudent = response.data;
           if (newStudent) {
@@ -431,14 +506,21 @@ export default function StudentsPage() {
 
   const handleDelete = async (id) => {
     if (!confirm('Are you sure you want to delete this student? This action cannot be undone and will remove the student\'s login credentials.')) return;
+    
     try {
       setError('');
       const response = await apiRequest(`/students/${id}`, {
         method: 'DELETE'
       });
+      
       if (response && response.success) {
         setSuccessMessage('Student deleted successfully!');
-        await fetchAllStudents();
+        // If current page becomes empty after deletion, go to previous page
+        if (students.length === 1 && page > 1) {
+          setPage(page - 1);
+        } else {
+          await fetchStudents();
+        }
         setTimeout(() => setSuccessMessage(''), 3000);
       } else {
         setError(response?.message || 'Delete failed');
@@ -453,6 +535,7 @@ export default function StudentsPage() {
     setError('');
     fetchInitialData();
   };
+
   const getBranchName = (branch) => {
     if (!branch) return 'N/A';
     if (typeof branch === 'object' && branch !== null) {
@@ -461,9 +544,6 @@ export default function StudentsPage() {
     const found = branches.find(b => b && b._id === branch);
     return found ? found.branchName : 'Unknown Branch';
   };
-  
-
-  
 
   const getClassName = (cls) => {
     if (!cls) return 'N/A';
@@ -483,25 +563,21 @@ export default function StudentsPage() {
     return found ? found.sectionName : 'Unknown Section';
   };
 
+  // Filter students based on search (client-side filtering of current page)
+  const filteredStudents = students;
 
-  // Filter students based on search
-  const filteredStudents = students.filter(student => {
-    if (!searchTerm) return true;
-    const searchLower = searchTerm.toLowerCase();
-    return (
-      student.fullName?.toLowerCase().includes(searchLower) ||
-      student.rollNo?.toLowerCase().includes(searchLower) ||
-      student.parentName?.toLowerCase().includes(searchLower) ||
-      student.parentMobile?.includes(searchTerm) ||
-      getBranchName(student.branch).toLowerCase().includes(searchLower) ||
-      getClassName(student.classRef).toLowerCase().includes(searchLower) ||
-      getSectionName(student.section).toLowerCase().includes(searchLower)
-    );
-  });
+  // Handle page change
+  const handlePageChange = (newPage) => {
+    setPage(newPage);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
-  
+  // Reset page to 1 when filters change
+  useEffect(() => {
+    setPage(1);
+  }, [selectedBranch, selectedClass, selectedSection]);
 
-  if (loading && allStudents.length === 0) {
+  if (loading && students.length === 0) {
     return (
       <Layout>
         <div className="min-h-screen flex items-center justify-center">
@@ -526,6 +602,7 @@ export default function StudentsPage() {
       </Layout>
     );
   }
+
   return (
     <Layout>
       {/* HEADER */}
@@ -550,6 +627,7 @@ export default function StudentsPage() {
           </button>
         </div>
       </div>
+
       {/* Error Message */}
       {error && (
         <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center gap-2">
@@ -563,6 +641,7 @@ export default function StudentsPage() {
           </button>
         </div>
       )}
+
       {/* Success Message */}
       {successMessage && (
         <div className="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg flex items-center gap-2">
@@ -572,6 +651,7 @@ export default function StudentsPage() {
           <span>{successMessage}</span>
         </div>
       )}
+
       {/* FILTERS AND SEARCH */}
       <div className="mb-6 grid grid-cols-1 md:grid-cols-5 gap-4">
         {/* Branch Filter */}
@@ -590,6 +670,7 @@ export default function StudentsPage() {
           </select>
           <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" size={18} />
         </div>
+
         {/* Class Filter */}
         <div className="relative">
           <select
@@ -607,6 +688,7 @@ export default function StudentsPage() {
           </select>
           <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" size={18} />
         </div>
+
         {/* Section Filter */}
         <div className="relative">
           <select
@@ -624,6 +706,7 @@ export default function StudentsPage() {
           </select>
           <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" size={18} />
         </div>
+
         {/* Search Bar */}
         <div className="relative md:col-span-2">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
@@ -631,17 +714,26 @@ export default function StudentsPage() {
             type="text"
             placeholder="Search by name, roll number, parent name, phone..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+
+            onChange={(e) => 
+              {setSearchTerm(e.target.value);
+              setPage(1)}}
             className="w-full pl-10 pr-4 py-2 border border-gray-300 text-black rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none"
           />
         </div>
       </div>
+
+      {/* Students Count Info */}
+      <div className="mb-4 text-sm text-gray-600">
+        Showing {filteredStudents.length} of {totalStudents} students
+      </div>
+
       {/* STUDENTS TABLE */}
       <div className="bg-white rounded-xl shadow overflow-hidden">
         <table className="w-full">
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">S.No</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Roll No</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student Name</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Parent Name</th>
@@ -654,7 +746,7 @@ export default function StudentsPage() {
             {filteredStudents.length > 0 ? (
               filteredStudents.map((student, index) => (
                 <tr key={student._id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 text-sm text-gray-900">{index + 1}</td>
+                  <td className="px-6 py-4 text-sm text-gray-900">{(page - 1) * LIMIT + index + 1}</td>
                   <td className="px-6 py-4 text-sm font-mono font-medium text-gray-900">{student.rollNo}</td>
                   <td className="px-6 py-4 text-sm text-gray-900">
                     <div className="flex items-center gap-1">
@@ -738,6 +830,18 @@ export default function StudentsPage() {
           </tbody>
         </table>
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="mt-6">
+          <Pagination 
+            page={page} 
+            setPage={handlePageChange} 
+            totalPages={totalPages} 
+          />
+        </div>
+      )}
+
       {/* CREATE/EDIT MODAL - HORIZONTAL LAYOUT */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 overflow-y-auto">
@@ -846,6 +950,7 @@ export default function StudentsPage() {
                   </div>
                 </div>
               </div>
+
               {/* Academic Information Section */}
               <div className="mb-6">
                 <h4 className="text-lg font-semibold text-gray-700 mb-4 flex items-center gap-2">
@@ -877,6 +982,7 @@ export default function StudentsPage() {
                       <p className="text-xs text-gray-500 mt-1">Cannot be changed</p>
                     )}
                   </div>
+
                   {/* Class Selection */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -898,6 +1004,7 @@ export default function StudentsPage() {
                       ))}
                     </select>
                   </div>
+
                   {/* Section Selection */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -921,6 +1028,7 @@ export default function StudentsPage() {
                   </div>
                 </div>
               </div>
+
               {/* Note for editing */}
               {editingStudent && (
                 <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-700">
@@ -930,6 +1038,7 @@ export default function StudentsPage() {
                   </p>
                 </div>
               )}
+
               {/* Error Message */}
               {error && (
                 <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg flex items-center gap-2">
@@ -937,6 +1046,7 @@ export default function StudentsPage() {
                   <span className="text-sm">{error}</span>
                 </div>
               )}
+
               {/* Form Actions */}
               <div className="flex justify-end gap-3 pt-4 border-t">
                 <button
@@ -968,6 +1078,7 @@ export default function StudentsPage() {
           </div>
         </div>
       )}
+
       {/* CREDENTIALS MODAL - Show after student creation */}
       {showCredentialsModal && newCredentials && selectedStudent && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -1049,6 +1160,7 @@ export default function StudentsPage() {
           </div>
         </div>
       )}
+
       {/* STUDENT DETAILS MODAL */}
       {showDetailsModal && selectedStudent && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -1086,6 +1198,7 @@ export default function StudentsPage() {
                   <p className="font-medium text-gray-900">{selectedStudent.parentMobile}</p>
                 </div>
               </div>
+
               {/* Location Information */}
               <div className="border-t pt-4">
                 <h4 className="font-semibold text-gray-900 mb-2">Location</h4>
@@ -1104,6 +1217,7 @@ export default function StudentsPage() {
                   </div>
                 </div>
               </div>
+
               {/* System Information */}
               <div className="border-t pt-4">
                 <h4 className="font-semibold text-gray-900 mb-2">System Information</h4>
