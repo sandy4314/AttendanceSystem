@@ -185,15 +185,27 @@ exports.getAssignments = async (req, res) => {
 /* ================= GET ASSIGNMENTS BY TEACHER ================= */
 exports.getAssignmentsByTeacher = async (req, res) => {
   try {
-    const assignments = await TeacherSubjectAssignment.find({
-      teacher: req.params.teacherId,
-      isActive: true
-    })
+    const limit=parseInt(req.query.limit);
+    const page=parseInt(req.query.page);
+    const skip=(page-1)*limit;
+
+    const filter={
+      teacher:req.params.teacherId,
+      isActive:true
+    }
+
+    const total =await TeacherSubjectAssignment.countDocuments(filter);
+
+    const assignments = await TeacherSubjectAssignment.find(filter)
       .populate('subject', 'subjectName')
       .populate('classRef', 'className')
       .populate('section', 'sectionName')
-      .populate('branch','branchName');
-
+      .populate('branch','branchName')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+      
+    
     if (!assignments || assignments.length === 0) {
       
       return res.status(200).json({
@@ -203,8 +215,14 @@ exports.getAssignmentsByTeacher = async (req, res) => {
       });
     }
 
+    
+    
     res.status(200).json({
       success: true,
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
       count: assignments.length,
       data: assignments
     });

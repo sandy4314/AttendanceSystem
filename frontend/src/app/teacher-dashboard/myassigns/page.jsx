@@ -5,6 +5,7 @@ import Layout from "@/components/Layout";
 import { useEffect, useState } from "react";
 import { apiRequest } from "@/services/api";
 import {Building,BookOpen,Layers,Users,GraduationCap,Grid,RefreshCw} from 'lucide-react';
+import Pagination from '@/components/Pagination';
 
 export default function MyAssigns(){
 
@@ -13,6 +14,9 @@ export default function MyAssigns(){
   const [teacherdata,setTeacherData]=useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [page,setPage]=useState(1);
+  const [totalPages,setTotalPages]=useState(1);
+  const limit=5;
   // const router=useRouter();
 
   useEffect(() => {
@@ -29,7 +33,7 @@ export default function MyAssigns(){
             fetchDashboardData();
         }
 
-    },[userid]);
+    },[userid,page]);
 
     const handleRefresh = () => {
     fetchDashboardData();
@@ -41,13 +45,14 @@ export default function MyAssigns(){
       try
       {
 
-      const teacherRes = await apiRequest(`/assignsubject/teacher/${userid}`);
+      const teacherRes = await apiRequest(`/assignsubject/teacher/${userid}?/&page=${page}&limit=${limit}`);
       let teacherArray = [];
         
 
       if (teacherRes?.success && Array.isArray(teacherRes.data)) {
             teacherArray = teacherRes.data;
             setTeacherData(teacherArray);
+            setTotalPages(teacherRes.totalPages || 1);
       }
 
     }catch (err) {
@@ -106,7 +111,7 @@ export default function MyAssigns(){
                 {teacherdata.length > 0 ? (
                   teacherdata.map((assignment, index) => (
                     <tr key={assignment._id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 text-sm text-gray-900">{index + 1}</td>
+                      <td className="px-6 py-4 text-sm text-gray-900">{(page - 1) * 5 + index + 1}</td>
                      
                       <td className="px-6 py-4 text-sm text-gray-900">
                         <div className="flex items-center gap-1">
@@ -136,6 +141,9 @@ export default function MyAssigns(){
                 )}
               </tbody>
             </table>
+          </div>
+          <div>
+            <Pagination page={page} totalPages={totalPages} setPage={setPage} />
           </div>
 </Layout>
     </div>)

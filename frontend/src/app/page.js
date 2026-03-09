@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState ,useEffect} from 'react';
 import { useRouter } from 'next/navigation';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 
@@ -12,6 +12,34 @@ export default function Login() {
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+
+  useEffect(() => {
+  const token = localStorage.getItem('token');
+  const user = localStorage.getItem('user');
+
+  if (token && user) {
+    const parsedUser = JSON.parse(user);
+
+    switch (parsedUser.role) {
+      case 'admin':
+        router.replace('/admin-dashboard');;
+        break;
+      case 'teacher':
+        router.push('/teacher-dashboard');
+        break;
+      case 'student':
+        router.push('/student-dashboard');
+        break;
+      case 'branchadmin':
+        router.push('/branch-dashboard');
+        break;
+      default:
+        router.push('/dashboard');
+    }
+  }
+}, []);
+
 
   const handleLogin = async (e) => {
     e.preventDefault();

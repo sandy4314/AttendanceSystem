@@ -71,54 +71,83 @@ exports.markAttendance = async (req, res) => {
 };
 
 
+
 exports.getStudentAttendance = async (req, res) => {
   const { studentId } = req.params;
+  const year = parseInt(req.query.year);
+  const month = parseInt(req.query.month);
+
+
+    if(!year || !month){
+      return res.status(400).json({
+        success:false,
+        message:"Year and Month are required"
+      });
+    }
+
 
   try {
     if (!mongoose.Types.ObjectId.isValid(studentId)) {
-      return res.status(400).json({ success: false, message: "Invalid Student ID" });
+      return res.status(400).json({
+        success: false,
+        message: "Invalid Student ID"
+      });
     }
 
     const result = await Attendance.aggregate([
-  
-      {
-        $match: {
-          "students.student": new mongoose.Types.ObjectId(studentId)
-        }
-      },
-      
-      {
-        $lookup: {
-          from: "subjects",          // The name of your subjects collection in MongoDB
-          localField: "subject",    // The field in Attendance document
-          foreignField: "_id",      // The field in Subjects document
-          as: "subjectData"
-        }
-      },
-   
-      { $unwind: "$subjectData" },
-     
-      { $unwind: "$students" },
-      
 
       {
         $match: {
           "students.student": new mongoose.Types.ObjectId(studentId)
         }
       },
-      
+
+      // Filter by year and month
+      {
+        $match: {
+          $expr: {
+            $and: [
+              { $eq: [{ $year: "$date" }, year] },
+              { $eq: [{ $month: "$date" }, month] }
+            ]
+          }
+        }
+      },
+
+      {
+        $lookup: {
+          from: "subjects",
+          localField: "subject",
+          foreignField: "_id",
+          as: "subjectData"
+        }
+      },
+
+      { $unwind: "$subjectData" },
+
+      { $unwind: "$students" },
+
+      {
+        $match: {
+          "students.student": new mongoose.Types.ObjectId(studentId)
+        }
+      },
+
       {
         $project: {
           _id: 0,
           date: 1,
           timeSlot: 1,
           status: "$students.status",
-          subjectName: "$subjectData.subjectName" // Adjust field name if different in your DB
+          subjectName: "$subjectData.subjectName"
         }
       },
+
       { $sort: { date: -1, timeSlot: 1 } }
+
     ]);
 
+    
     res.status(200).json({
       success: true,
       count: result.length,
@@ -133,6 +162,8 @@ exports.getStudentAttendance = async (req, res) => {
     });
   }
 };
+
+
 
 
 

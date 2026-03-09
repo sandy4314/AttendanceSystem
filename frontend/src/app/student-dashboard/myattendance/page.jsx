@@ -12,7 +12,25 @@ export default function MyAttendance(){
     const [data,setData]=useState([]);
     const [userid,setUserId]=useState('');
     const [uniquedates,setUniqueDates]=useState([]);
-    const [newdata,setNewData]=useState({})
+    const [newdata,setNewData]=useState({});
+    const [year,setYear]=useState('');
+    const [month,setMonth]=useState('');
+
+    const years=[2025,2026];
+    const months = [
+            { name: "Jan", value: 1 },
+            { name: "Feb", value: 2 },
+            { name: "Mar", value: 3 },
+            { name: "Apr", value: 4 },
+            { name: "May", value: 5 },
+            { name: "Jun", value: 6 },
+            { name: "Jul", value: 7 },
+            { name: "Aug", value: 8 },
+            { name: "Sep", value: 9 },
+            { name: "Oct", value: 10 },
+            { name: "Nov", value: 11 },
+            { name: "Dec", value: 12 }
+            ];
 
     
      
@@ -26,16 +44,22 @@ export default function MyAttendance(){
     
     useEffect(()=>{
 
-        if(userid){
+        if(userid && year && month){
             GetAttendance();
         }
 
-    },[userid]);
+    },[userid,year,month]);
+
+    
 
     const GetAttendance=async()=>{
         try
         {
-        const attendance=await apiRequest(`/attendance/student/${userid}`);
+       
+        const attendance = await apiRequest(
+        `/attendance/student/${userid}?year=${year}&month=${month}`
+        );
+
         setData(attendance.data);
         
         
@@ -110,10 +134,48 @@ export default function MyAttendance(){
 
                 <div className="p-6">
                     
-                    
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+                        
                     <h2 className="text-2xl font-semibold mb-6 text-gray-800">
                         My Attendance
                     </h2>
+                    
+
+                    <div className="flex flex-wrap items-center gap-4 mb-6">
+
+                    {/* Year Select */}
+                    <div className="flex flex-col">
+                        <label className="text-sm text-gray-600 mb-1">Year</label>
+                        <select
+                        className="px-4 py-2 border rounded-lg bg-white text-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                        value={year}
+                        onChange={(e)=>setYear(e.target.value)}
+                        >
+                        <option value="">Select Year</option>
+                        {years.map((y)=>(
+                            <option key={y} value={y}>{y}</option>
+                        ))}
+                        </select>
+                    </div>
+
+                    {/* Month Select */}
+                    <div className="flex flex-col">
+                        <label className="text-sm text-gray-600 mb-1">Month</label>
+                        <select
+                        className="px-4 py-2 border rounded-lg bg-white text-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                        value={month}
+                        onChange={(e)=>setMonth(e.target.value)}
+                        >
+                        <option value="">Select Month</option>
+                        {months.map((m)=>(
+                            <option key={m.value} value={m.value}>{m.name}</option>
+                        ))}
+                        </select>
+                    </div>
+
+                    </div>
+                    </div>
+
 
                     <div className="overflow-x-auto">
                         <table className="min-w-full border border-gray-200 text-sm text-center">
