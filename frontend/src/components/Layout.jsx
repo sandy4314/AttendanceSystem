@@ -5,12 +5,14 @@ import ProtectedRoute from './ProtectedRoute';
 import AdminSidebar from './AdminSidebar';
 import TeacherSidebar from './TeacherSidebar';
 import StudentSidebar from './StudentSidebar';
+import BranchAdminSidebar from './BranchAdminSidebar';
 
 // Sidebar mapping
 const sidebarMap = {
   admin: AdminSidebar,
   teacher: TeacherSidebar,
   student: StudentSidebar,
+  branchadmin: BranchAdminSidebar
 };
 
 export default function Layout({ children, role }) {
