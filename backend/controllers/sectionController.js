@@ -145,6 +145,39 @@ exports.getSections=async(req,res)=>{
 }
 
 
+exports.getAllSections = async(req,res)=>{
+  try
+  {
+    const sections=await Section.find()
+    .sort({createdAt:-1});
+
+    if(!sections){
+      return res.status(201).json({
+        success:true,
+        message:"No sections are available",
+        data:[]
+      });
+
+
+    }
+
+    res.status(200).json({
+      success:true,
+      message:"sections data fetched successfully",
+      data:sections
+    });
+
+
+  }catch(err){
+    console.error(err);
+    res.status(500).json({
+      success:false,
+      message:"server error Failed to fetch sections"
+    });
+
+  }
+}
+
 exports.getSectionsByClass= async(req,res)=>{
     try
     {

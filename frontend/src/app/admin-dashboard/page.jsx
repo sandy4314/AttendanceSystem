@@ -35,12 +35,12 @@ export default function AdminDashboard() {
 
       // Fetch all data in parallel for better performance
       const [branchesRes, teachersRes, studentsRes, classesRes, sectionsRes, subjectsRes] = await Promise.allSettled([
-        apiRequest('/branches'),
-        apiRequest('/teachers'),
-        apiRequest('/students'),
-        apiRequest('/classes'),
-        apiRequest('/sections'),
-        apiRequest('/subjects')
+        apiRequest('/branches/all'),
+        apiRequest('/teachers/all'),
+        apiRequest('/students/all'),
+        apiRequest('/classes/all'),
+        apiRequest('/sections/all'),
+        apiRequest('/subjects/all')
       ]);
 
       // Process Branches

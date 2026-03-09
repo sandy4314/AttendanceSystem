@@ -5,7 +5,7 @@ const userSchema=new mongoose.Schema(
     {
         name:{
             type:String,
-            required:true
+            
         },
         username:{
             type:String,
@@ -19,7 +19,7 @@ const userSchema=new mongoose.Schema(
         },
         role:{
             type:String,
-            enum:['admin','student','teacher'],
+            enum:['admin','student','teacher','branchadmin'],
             required:true
         },
         linkedId:{

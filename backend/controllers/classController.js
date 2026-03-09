@@ -58,6 +58,34 @@ exports.createClass=async(req,res)=>{
     }
 }
 
+exports.getAllClasses = async (req,res)=>{
+  try
+  {
+    const classes=await Class.find()
+    .sort({createdAt:-1})
+    if(!classes){
+      return res.status(201).json({
+        success:true,
+        message:"No classes found",
+        data:[]
+      });
+    }
+
+    res.status(201).json({
+      success:true,
+      message:"Classes fetched successfully",
+      data:classes
+    });
+
+
+  }catch(err){
+    console.error(err);
+    res.status(500).json({
+      success:false,
+      message:"server error Failed to fetch classes"
+    });
+  }
+}
 
 exports.getClasses = async (req, res) => {
   try {

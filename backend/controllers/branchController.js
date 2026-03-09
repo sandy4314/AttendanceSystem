@@ -1,27 +1,71 @@
 const Branch=require('../models/Branch');
+const mongoose = require('mongoose');
+const User =require('../models/User');
 
 exports.createBranch=async(req,res)=>{
-    const {schoolName,branchName,location,status}=req.body;
+    const {schoolName,branchName,location,status,username,password}=req.body;
+
+    const session= await mongoose.startSession();
+    session.startTransaction();
+
     try
     {
-        const existingBranch=await Branch.findOne({branchName:branchName})
+
+        const existingUser= await User.findOne({username}).session(session);
+                if(existingUser)
+                {
+                    await session.abortTransaction();
+                    session.endSession();
+        
+                    return res.status(400).json({
+                        success:false,
+                        message:"username already exists"
+                    });
+                }
+            
+        const existingBranch=await Branch.findOne({branchName:branchName}).session(session);
         if(existingBranch){
+
+            await session.abortTransaction();
+            session.endSession();
+
             return res.status(400).json({
                 success:false,
                 message:"Branch already exists"
             })
         }
-        const branch=await Branch.create({
+
+
+        const branch=await Branch.create([{
             schoolName,
             branchName,
             location,
             status
-        });
+        }],{session});
 
-        await branch.save();
+
+        const user=await User.create([{
+                username,
+                password,
+                role:'branchadmin',
+                linkedId:branch[0]._id
+        
+            }],
+            
+            {session}
+        );
+
+        branch[0].user=user[0]._id;
+
+        await branch[0].save({session});
+
+        await session.commitTransaction();
+        session.endSession();
+
+        
         res.status(201).json({
             success:true,
-            data:branch,
+            data:branch[0],
             message:"Branch created successfully",
         });
 

@@ -7,6 +7,7 @@ router.use(authMiddleware.protect);
 
 router.post('/',authMiddleware.restrictTo('admin'),classController.createClass);
 router.get('/',authMiddleware.restrictTo('admin'),classController.getClasses);
+router.get('/all',authMiddleware.restrictTo('admin'),classController.getAllClasses);
 router.get('/branch/:branchId',authMiddleware.restrictTo('admin'),classController.getClassesByBranch);
 router.route('/:id',authMiddleware.restrictTo('admin'))
 .put(classController.updateClass)

@@ -136,7 +136,7 @@ useEffect(() => {
 
   const fetchTeachers = async () => {
     try {
-      const response = await apiRequest('/teachers');
+      const response = await apiRequest('/teachers/all');
       if (response && Array.isArray(response)) {
         setTeachers(response);
       } else if (response && response.success) {

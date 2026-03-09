@@ -18,7 +18,11 @@ const branchSchema = new mongoose.Schema(
             type: String,
             enum: ['active', 'inactive'],
             default: 'active'
-        }
+        },
+        user:{
+                type:mongoose.Schema.Types.ObjectId,
+                ref:'User'
+            }
     },
     { timestamps: true }
 );

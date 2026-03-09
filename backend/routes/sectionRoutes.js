@@ -10,7 +10,7 @@ router.route('/')
 .post(authMiddleware.restrictTo('admin'),sectionController.createSection)
 .get(sectionController.getSections);
 
-
+router.get('/all',authMiddleware.restrictTo('admin'),sectionController.getAllSections);
 
 router.get('/class/:classId',sectionController.getSectionsByClass)
 

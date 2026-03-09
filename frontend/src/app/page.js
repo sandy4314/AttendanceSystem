@@ -55,6 +55,9 @@ export default function Login() {
         case 'student':
           router.push('/student-dashboard');
           break;
+        case 'branchadmin':
+          router.push('/branch-dashboard');
+          break;
         default:
           router.push('/dashboard');
       }
