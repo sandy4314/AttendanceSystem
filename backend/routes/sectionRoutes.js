@@ -7,7 +7,7 @@ const router=express.Router();
 router.use(authMiddleware.protect);
 
 router.route('/')
-.post(authMiddleware.restrictTo('admin'),sectionController.createSection)
+.post(authMiddleware.restrictTo('admin','branchadmin'),sectionController.createSection)
 .get(sectionController.getSections);
 
 router.get('/all',authMiddleware.restrictTo('admin'),sectionController.getAllSections);

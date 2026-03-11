@@ -32,7 +32,7 @@ export default function BranchDashboard() {
       setError('Failed to load user data');
     }
   }, []);
-
+  
   useEffect(() => {
     if (user) {
       fetchDashboardData();

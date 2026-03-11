@@ -38,7 +38,8 @@ export default function AdminSidebar() {
     { href: '/admin-dashboard/students', icon: <GraduationCap size={20} />, label: 'Students' },
     { href: '/admin-dashboard/teachers', icon: <Users size={20} />, label: 'Teachers' },
     { href: '/admin-dashboard/subjects', icon: <BookOpen size={20} />, label: 'Subjects' },
-    { href: '/admin-dashboard/assignsubject', icon: <BookMarked size={20} />, label: 'Assign Subject' },
+    { href: '/admin-dashboard/assignbranch', icon: <BookMarked size={20} />, label: 'Assign Branch' },
+    { href: '/admin-dashboard/assignsubject', icon: <Layers size={20} />, label: 'Assign Subject' },
   ];
 
   return (

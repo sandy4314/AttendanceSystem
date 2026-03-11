@@ -15,6 +15,7 @@ const sidebarMap = {
   branchadmin: BranchAdminSidebar
 };
 
+
 export default function Layout({ children, role }) {
   const [finalRole, setFinalRole] = useState(null);
 

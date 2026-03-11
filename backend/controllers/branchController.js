@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const User =require('../models/User');
 
 exports.createBranch=async(req,res)=>{
-    const {schoolName,branchName,location,status,username,password}=req.body;
+    const {branchName,location,status,username,password}=req.body;
 
     const session= await mongoose.startSession();
     session.startTransaction();
@@ -37,7 +37,7 @@ exports.createBranch=async(req,res)=>{
 
 
         const branch=await Branch.create([{
-            schoolName,
+           
             branchName,
             location,
             status
@@ -101,7 +101,7 @@ exports.getBranches = async (req, res) => {
       if(search){
             filter.$or = [
               { branchName: { $regex: search, $options: "i" } },
-              { schoolName: { $regex: search, $options: "i" } },
+              
               { location: { $regex: search, $options: "i" } }
             ];
 
@@ -142,7 +142,7 @@ exports.getAllBranches = async (req, res) => {
   try {
 
     const branches = await Branch.find({ status: "active" })
-      .select("branchName schoolName")
+      .select("branchName")
       .sort({ branchName: 1 });
 
     res.status(200).json({
@@ -192,7 +192,7 @@ exports.getBranchById= async(req,res)=>{
 }
 
 exports.updateBranch = async (req, res) => {
-  const { schoolName, branchName, location ,status} = req.body;
+  const { branchName, location ,status} = req.body;
 
   try {
     

@@ -23,22 +23,22 @@ export default function Login() {
 
     switch (parsedUser.role) {
       case 'admin':
-        router.replace('/admin-dashboard');;
+        router.replace('/admin-dashboard');
         break;
       case 'teacher':
-        router.push('/teacher-dashboard');
+        router.replace('/teacher-dashboard');
         break;
       case 'student':
-        router.push('/student-dashboard');
+        router.replace('/student-dashboard');
         break;
       case 'branchadmin':
-        router.push('/branch-dashboard');
+        router.replace('/branch-dashboard');
         break;
       default:
-        router.push('/dashboard');
+        router.replace('/dashboard');
     }
   }
-}, []);
+}, [router]);
 
 
   const handleLogin = async (e) => {
@@ -114,7 +114,7 @@ export default function Login() {
       </div>
 
       {/* RIGHT SIDE FORM */}
-      <div className="flex w-full md:w-1/2 items-center justify-center bg-gradient-to-br from-amber-50 to-orange-100 p-6">
+      <div className="flex w-full md:w-1/2 items-center justify-center bg-linear-to-br from-amber-50 to-orange-100 p-6">
         <div className="w-full max-w-md backdrop-blur-lg bg-white/80 shadow-2xl rounded-2xl p-8 border border-white/30">
           {/* Header */}
           <div className="text-center mb-6">

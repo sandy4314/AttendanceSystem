@@ -144,6 +144,18 @@ export async function apiRequestFormData(endpoint, formData, options = {}) {
     credentials: 'include',
   };
 
+  function handleSessionExpired() {
+  localStorage.removeItem('token');
+  localStorage.removeItem('user');
+  localStorage.removeItem('linkedId');
+  window.location.href = '/';
+}
+
+if (res.status === 401) {
+  handleSessionExpired();
+  throw new Error('Session expired. Please login again.');
+}
+
   try {
     const url = `${BASE_URL}${endpoint}`;
     console.log(`Making ${config.method} (FormData) request to:`, url);
@@ -151,9 +163,9 @@ export async function apiRequestFormData(endpoint, formData, options = {}) {
     const res = await fetch(url, config);
 
     if (res.status === 401) {
-      localStorage.clear();
-      window.location.href = '/';
-      throw new Error('Session expired. Please login again.');
+        localStorage.clear();
+        window.location.href = '/';
+        throw new Error('Session expired. Please login again.');
     }
 
     let data;

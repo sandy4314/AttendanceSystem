@@ -120,6 +120,19 @@ exports.getClasses = async (req, res) => {
       .skip(skip)
       .limit(limit);
 
+    
+    if (classes.length === 0) {
+        return res.status(200).json({
+          success: true,
+          page,
+          limit,
+          total: 0,
+          totalPages: 0,
+          count: 0,
+          data: []
+        });
+    }
+
     res.status(200).json({
       success: true,
       page,

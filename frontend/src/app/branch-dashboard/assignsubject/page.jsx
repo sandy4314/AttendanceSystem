@@ -22,7 +22,7 @@ export default function AssignSubjectPage() {
   const [successMessage, setSuccessMessage] = useState('');
 
   // Filter states
-  const [selectedBranch, setSelectedBranch] = useState('all');
+  const [selectedBranch, setSelectedBranch] = useState(null);
   const [selectedClass, setSelectedClass] = useState('all');
   const [selectedSection, setSelectedSection] = useState('all');
   
@@ -53,13 +53,19 @@ export default function AssignSubjectPage() {
   // Initial data fetch
   useEffect(() => {
 
-  refreshTeachersAndSubjects();
+  if(selectedBranch){
+    
+    refreshTeachersAndSubjects();
+
+  }
 
   fetchBranches();
 }, []);
 
  useEffect(() => {
+    if(selectedBranch){
   fetchAssignments();
+    }
 }, [page, selectedBranch, selectedClass, selectedSection, debouncedSearch]);
 
   useEffect(() => {
@@ -71,7 +77,16 @@ export default function AssignSubjectPage() {
     }, [searchTerm]);
 
 
-  
+  useEffect(()=>{
+    const storedBranch=JSON.parse(localStorage.getItem('user')  || '{}');
+    console.log(storedBranch);
+        if (!storedBranch.linkedId) {
+          console.error('No linkedId found in user data');
+          return;
+        }
+    setSelectedBranch(storedBranch.linkedId);
+
+  },[]);
 
   const fetchInitialData = async () => {
     setLoading(true);
@@ -96,7 +111,7 @@ export default function AssignSubjectPage() {
 
       let url=`/assignsubject?&page=${page}&limit=${limit}`;
 
-      if (selectedBranch !== "all") {
+      if (selectedBranch) {
         url += `&branchId=${selectedBranch}`;
       }
 
@@ -137,19 +152,24 @@ export default function AssignSubjectPage() {
   };
 
   const fetchTeachers = async () => {
-    try {
-      const response = await apiRequest('/teachers/all');
-      if (response && response.success){ 
-        setTeachers(response.data);
-      }
-      else{
-        setTeachers([]);
-      }
-    } catch (error) {
-      console.error('Error fetching teachers:', error);
-      setTeachers([]);
+  try {
+
+    let url = `/assignbranch/all`;
+
+    if (selectedBranch) {
+      url += `?branch=${selectedBranch}`;
     }
-  };
+
+    const response = await apiRequest(url);
+
+    if (response && response.success) {
+      setTeachers(response.data || []);
+    }
+
+  } catch (error) {
+    console.error('Error fetching teachers:', error);
+  }
+};
 
 
   const fetchSubjects = async () => {
@@ -265,7 +285,7 @@ const filterSectionsByClass = async (classId)=>{
 
   useEffect(() => {
   const loadClasses = async () => {
-    if (selectedBranch !== "all") {
+    if (selectedBranch) {
       await filterClassesByBranch(selectedBranch);
     } else {
       setFilteredClasses([]);
@@ -357,12 +377,13 @@ const filterSectionsByClass = async (classId)=>{
     setFormData({
       teacher: '',
       subject: '',
-      branch: '',
+      branch: selectedBranch || "",
       classRef: '',
       section: ''
     });
-    setFilteredClasses([]);
-    setFilteredSections([]);
+    await fetchClassesByBranch(selectedBranch)
+    // setFilteredClasses([]);
+    // setFilteredSections([]);
     setError('');
     setShowModal(true);
   };
@@ -728,15 +749,11 @@ const filterSectionsByClass = async (classId)=>{
                     disabled={submitting}
                   >
                     <option value="">Choose a teacher</option>
-                    {teachers.length > 0 ? (
-                      teachers.map(teacher => (
-                        <option key={teacher._id} value={teacher._id}>
-                          {teacher.fullName} {teacher.employeeId ? `- ${teacher.employeeId}` : ''}
-                        </option>
-                      ))
-                    ) : (
-                      <option value="" disabled>No teachers available</option>
-                    )}
+                    {teachers.map(assign => (
+                                        <option key={assign.teacher._id} value={assign.teacher._id}>
+                                            {assign.teacher.fullName} ({assign.teacher.phone})
+                                        </option>
+                                        ))}
                   </select>
                   {teachers.length === 0 && (
                     <p className="text-xs text-amber-600 mt-1">
@@ -752,11 +769,11 @@ const filterSectionsByClass = async (classId)=>{
                   </label>
                   <select
                     name="branch"
-                    value={formData.branch}
+                    value={selectedBranch}
                     onChange={handleInputChange}
                     className="w-full p-2 border border-gray-300 text-black rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none"
                     required
-                    disabled={submitting}
+                    disabled={true}
                   >
                     <option value="">Choose a branch</option>
                     {branches.length > 0 ? (
@@ -782,7 +799,7 @@ const filterSectionsByClass = async (classId)=>{
                     onChange={handleInputChange}
                     className="w-full p-2 border border-gray-300 text-black rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none"
                     required
-                    disabled={submitting || !formData.branch}
+                    disabled={submitting || !selectedBranch}
                   >
                     <option value="">Choose a class</option>
                     {availableClasses.length > 0 ? (

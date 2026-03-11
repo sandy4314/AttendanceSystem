@@ -36,6 +36,7 @@ export default function BranchAdminSidebar() {
     { href: '/branch-dashboard/sections', icon: <Layers size={20} />, label: 'Sections' },
     { href: '/branch-dashboard/students', icon: <GraduationCap size={20} />, label: 'Students' },
     { href: '/branch-dashboard/teachers', icon: <Users size={20} />, label: 'Teachers' },
+    { href: '/branch-dashboard/assignsubject', icon: <BookMarked size={20} />, label: 'Assign Subject' },
   ];
 
   return (

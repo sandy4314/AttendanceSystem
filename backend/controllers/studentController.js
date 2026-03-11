@@ -141,6 +141,14 @@ exports.getAllStudents = async (req, res) => {
       .populate('classRef', 'className')
       .populate('section', 'sectionName')
       .populate('user', 'username');
+    
+      if(students.length==0){
+        return res.status(404).json({
+          success:true,
+          message:"No students Found",
+          data:[]
+        })
+      }
 
     res.status(200).json({
       success: true,
@@ -163,7 +171,7 @@ exports.getStudents=async(req,res)=>{
     try
     {
         const page=parseInt(req.query.page) || 1;
-        const limit=parseInt(req.query.limit);
+        const limit=parseInt(req.query.limit) || 5;
         const branchId=req.query.branchId;
         const classId=req.query.classId;
         const sectionId=req.query.sectionId;
@@ -208,13 +216,18 @@ exports.getStudents=async(req,res)=>{
                 .limit(limit);
 
 
-        if(!students){
-          return res.status(404).json({
-            success:false,
-            messgae:"No students found"
-          });
+        if (students.length === 0) {
+            return res.status(200).json({
+              success: true,
+              page,
+              limit,
+              total: 0,
+              totalPages: 0,
+              count: 0,
+              data: []
+            });
+    }
 
-        }
 
         res.status(200).json({
           success: true,

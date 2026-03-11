@@ -22,7 +22,7 @@ export default function BranchesPage() {
 
   // Form state
   const [formData, setFormData] = useState({
-    schoolName: '',
+    
     branchName: '',
     location: '',
     username:'',
@@ -86,7 +86,7 @@ export default function BranchesPage() {
   const openCreateModal = () => {
     setEditingBranch(null);
     setFormData({
-      schoolName: '',
+      
       branchName: '',
       location: '',
       status: 'active'
@@ -99,7 +99,7 @@ export default function BranchesPage() {
   const openEditModal = (branch) => {
     setEditingBranch(branch);
     setFormData({
-      schoolName: branch.schoolName || '',
+      
       branchName: branch.branchName || '',
       location: branch.location || '',
       username:branch?.username || '',
@@ -184,7 +184,7 @@ export default function BranchesPage() {
       const response = await apiRequest(`/branches/${branch._id}`, {
         method: 'PUT',
         body: JSON.stringify({
-          schoolName: branch.schoolName,
+          
           branchName: branch.branchName,
           location: branch.location || '',
           status: newStatus
@@ -303,7 +303,7 @@ export default function BranchesPage() {
                   <td className="px-6 py-4 text-sm text-gray-900">
                                                 {(page - 1) * 5 + index + 1}
                                               </td>
-                  <td className="px-6 py-4 text-sm text-gray-900 font-medium">{branch.schoolName}</td>
+
                   <td className="px-6 py-4 text-sm text-gray-900">{branch.branchName}</td>
                   <td className="px-6 py-4 text-sm text-gray-900">{branch.location || 'Not specified'}</td>
                   <td className="px-6 py-4 text-sm">
@@ -398,21 +398,7 @@ export default function BranchesPage() {
             )}
             <form onSubmit={handleSubmit}>
               <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    School Name *
-                  </label>
-                  <input
-                    type="text"
-                    name="schoolName"
-                    value={formData.schoolName}
-                    onChange={handleInputChange}
-                    required
-                    disabled={submitting}
-                    className="w-full px-3 py-2 border text-gray-700 border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none disabled:bg-gray-100"
-                    placeholder="Enter school name"
-                  />
-                </div>
+                
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Branch Name *

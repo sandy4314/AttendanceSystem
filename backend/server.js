@@ -32,6 +32,7 @@ const studentRoutes=require('./routes/studentRoutes');
 const subjectRoutes=require('./routes/subjectRoutes');
 const tsaRoutes=require('./routes/teachersubjectassignRoutes');
 const attendanceRoutes=require('./routes/attendanceRoutes');
+const tbaRoutes=require('./routes/teacherbranchassignRoutes');
 
 app.use('/api/auth',authRoutes);
 app.use('/api/teachers',teacherRoutes);
@@ -42,7 +43,7 @@ app.use('/api/students',studentRoutes);
 app.use('/api/subjects',subjectRoutes);
 app.use('/api/assignsubject',tsaRoutes);
 app.use('/api/attendance',attendanceRoutes);
-
+app.use('/api/assignbranch',tbaRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

@@ -113,13 +113,17 @@ exports.getSections=async(req,res)=>{
         .skip(skip)
         .limit(limit);
 
-        if(!sections){
-            return res.status(404).json({
-                success:false,
-                message:"NO sections are found"
-            });
-
-        }
+        if (sections.length === 0) {
+          return res.status(200).json({
+            success: true,
+            page,
+            limit,
+            total: 0,
+            totalPages: 0,
+            count: 0,
+            data: []
+          });
+}
 
         res.status(200).json({
           success: true,
