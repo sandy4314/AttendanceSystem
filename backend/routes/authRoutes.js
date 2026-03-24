@@ -6,6 +6,8 @@ const authMiddleware=require('../middleware/authMiddleware')
 router.post('/login', authController.login);
 router.post('/register', authController.register); // admin only later
 router.get('/users',authMiddleware.protect,authMiddleware.restrictTo('admin'),authController.getUsers);
+router.get('/me', authMiddleware.protect,authController.getMe);
+router.post('/logout',authMiddleware.protect,authController.logout);
 
 
 module.exports = router;

@@ -5,6 +5,9 @@ import { useState, useEffect } from 'react';
 import { apiRequest } from '../../../services/api';
 import {Building,Plus,Edit,Trash2,Search,X,AlertCircle,Eye,User,ChevronDown} from 'lucide-react';
 import Pagination from '@/components/Pagination';
+import {useAuth} from '@/components/AuthContext';
+
+
 
 export default function SectionsPage() {
   const [sections, setSections] = useState([]);
@@ -30,6 +33,7 @@ export default function SectionsPage() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const LIMIT = 5;
+  const {user,loading:authLoading}= useAuth();
 
 
   // Form state
@@ -77,16 +81,17 @@ useEffect(() => {
 
 
 
- useEffect(()=>{
-    const storedBranch=JSON.parse(localStorage.getItem('user')  || '{}');
-    console.log(storedBranch);
-        if (!storedBranch.linkedId) {
+useEffect(()=>{
+    if(user)
+      {
+        if (!user.linkedId) {
           console.error('No linkedId found in user data');
           return;
         }
-    setSelectedBranch(storedBranch.linkedId);
+        setSelectedBranch(user.linkedId);
+    }
 
-  },[])
+  },[user]);
   
 
 

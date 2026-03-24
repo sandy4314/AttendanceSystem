@@ -40,5 +40,11 @@ userSchema.methods.comparePassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
+
+userSchema.index({
+    username:1,
+    password:1
+});
+
 module.exports=mongoose.model('User',userSchema);
 

@@ -25,11 +25,16 @@ export default function AdminSidebar() {
   const pathname = usePathname();
   const router = useRouter();
 
-  const handleLogout = () => {
-    localStorage.clear();
-    router.push('/');
-  };
+  const handleLogout = async () => {
+    
+  await fetch('http://localhost:5000/api/auth/logout', {
+    method: 'POST',
+    credentials: 'include',
+  });
 
+  router.push('/');
+};
+ 
   const menuItems = [
     { href: '/admin-dashboard', icon: <LayoutDashboard size={20} />, label: 'Dashboard' },
     { href: '/admin-dashboard/branches', icon: <Building size={20} />, label: 'Branches' },
@@ -39,7 +44,7 @@ export default function AdminSidebar() {
     { href: '/admin-dashboard/teachers', icon: <Users size={20} />, label: 'Teachers' },
     { href: '/admin-dashboard/subjects', icon: <BookOpen size={20} />, label: 'Subjects' },
     { href: '/admin-dashboard/assignbranch', icon: <BookMarked size={20} />, label: 'Assign Branch' },
-    { href: '/admin-dashboard/assignsubject', icon: <Layers size={20} />, label: 'Assign Subject' },
+    
   ];
 
   return (

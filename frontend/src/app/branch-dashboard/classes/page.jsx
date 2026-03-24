@@ -6,6 +6,9 @@ import { apiRequest } from '../../../services/api';
 import {Building,Plus,Edit,Trash2,Search,X,AlertCircle,Eye,User,ChevronDown} from 'lucide-react';
 import Pagination from '@/components/Pagination';
 
+import{useAuth} from '@/components/AuthContext';
+
+
 export default function ClassesPage() {
   const [classes, setClasses] = useState([]);
   const [branches, setBranches] = useState([]);
@@ -23,8 +26,11 @@ export default function ClassesPage() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
-const [debouncedSearch, setDebouncedSearch] = useState('');
-const limit=5;
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const limit=5;
+  const {user,loading:authLoading}= useAuth();
+
+
   // Form state
   const [formData, setFormData] = useState({
     className: '',
@@ -64,17 +70,20 @@ const limit=5;
 
 
 
+
 useEffect(()=>{
-    const storedBranch=JSON.parse(localStorage.getItem('user')  || '{}');
-    console.log(storedBranch);
-        if (!storedBranch.linkedId) {
+    if(user)
+      {
+        if (!user.linkedId) {
           console.error('No linkedId found in user data');
           return;
         }
-    setSelectedBranch(storedBranch.linkedId);
+        setSelectedBranch(user.linkedId);
+    }
 
-  },[]);
+  },[user]);
 
+  
   
 
   const fetchClasses = async (pageNumber = 1) => {

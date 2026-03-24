@@ -89,7 +89,9 @@ export default function BranchesPage() {
       
       branchName: '',
       location: '',
-      status: 'active'
+      status: 'active',
+      username:'',
+      password:''
     });
     setError('');
     setSuccessMessage('');
@@ -102,8 +104,8 @@ export default function BranchesPage() {
       
       branchName: branch.branchName || '',
       location: branch.location || '',
-      username:branch?.username || '',
-      password:branch?.password || '',
+      username:branch?.user?.username || '',
+      password:branch?.user?.password || '',
       status: branch.status || 'active'
     });
     setError('');
@@ -273,7 +275,7 @@ export default function BranchesPage() {
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
         <input
           type="text"
-          placeholder="Search by school name, branch name, or location..."
+          placeholder="Search by  branch name, or location..."
           value={searchTerm}
           onChange={(e) => {setSearchTerm(e.target.value);
             setPage(1);
@@ -289,7 +291,7 @@ export default function BranchesPage() {
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">School Name</th>
+
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Branch Name</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
@@ -316,16 +318,7 @@ export default function BranchesPage() {
                   </td>
                   <td className="px-6 py-4 text-sm">
                     <div className="flex space-x-2">
-                      <button
-                        onClick={() => toggleStatus(branch)}
-                        className={`p-1 rounded transition ${branch.status === 'active'
-                            ? 'text-green-600 hover:bg-green-100'
-                            : 'text-gray-600 hover:bg-gray-100'
-                          }`}
-                        title={branch.status === 'active' ? 'Deactivate' : 'Activate'}
-                      >
-                        {branch.status === 'active' ? <Unlock size={18} /> : <Lock size={18} />}
-                      </button>
+                      
                       <button
                         onClick={() => openEditModal(branch)}
                         className="p-1 text-blue-600 hover:bg-blue-100 rounded transition"
@@ -453,7 +446,7 @@ export default function BranchesPage() {
                     value={formData.username}
                     onChange={handleInputChange}
                     required
-                    disabled={submitting}
+                    disabled={submitting || editingBranch}
                     className="w-full px-3 py-2 border text-gray-700 border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none disabled:bg-gray-100"
                     placeholder="Enter Username"
                   />
@@ -469,7 +462,7 @@ export default function BranchesPage() {
                     value={formData.password}
                     onChange={handleInputChange}
                     required
-                    disabled={submitting}
+                    disabled={submitting || editingBranch}
                     className="w-full px-3 py-2 border text-gray-700 border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none disabled:bg-gray-100"
                     placeholder="Enter Password"
                   />

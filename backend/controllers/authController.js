@@ -30,9 +30,17 @@ exports.login= async (req,res)=>{
             {expiresIn:'1d'}
         );
 
+        res.cookie("token", token, {
+      httpOnly: true,
+      secure: false,
+      sameSite: "Lax",
+      maxAge: 24 * 60 * 60 * 1000,
+    });
+
+
         res.json({
         success: true,
-        token,
+       
         user: {
             id: user._id,
             username: user.username,
@@ -40,6 +48,8 @@ exports.login= async (req,res)=>{
             linkedId:user.linkedId
         }
         });
+
+        
 
     }
     
@@ -114,5 +124,21 @@ exports.getUsers=async (req,res)=>{
 }
 
 
+exports.getMe = async (req, res) => {
+
+    res.set('Cache-Control', 'no-store'); // 🔥 IMPORTANT
+  res.status(200).json({
+    success: true,
+    user: req.user
+  });
+};
 
 
+exports.logout = (req, res) => {
+  res.cookie("token", "", {
+    httpOnly: true,
+    expires: new Date(0),
+  });
+
+  res.json({ success: true });
+};

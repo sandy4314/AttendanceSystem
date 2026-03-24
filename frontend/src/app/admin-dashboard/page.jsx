@@ -6,6 +6,7 @@ import { apiRequest } from '../../services/api';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Building, BookOpen, Layers, Users, GraduationCap, Grid, RefreshCw, BookMarked } from 'lucide-react';
+import {useAuth} from '@/context/AuthContext';
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -24,14 +25,19 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  const { user, loading:authLoading } = useAuth();
+  
   useEffect(() => {
-    fetchDashboardData();
-  }, []);
+    if (user) {
+      fetchDashboardData();
+    }
+  }, [user]);
 
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
       setError('');
+
 
       // Fetch all data in parallel for better performance
       const [branchesRes, teachersRes, studentsRes, classesRes, sectionsRes, subjectsRes] = await Promise.allSettled([
@@ -42,6 +48,8 @@ export default function AdminDashboard() {
         apiRequest('/sections/all'),
         apiRequest('/subjects/all')
       ]);
+
+       
 
       // Process Branches
       if (branchesRes.status === 'fulfilled' && branchesRes.value) {

@@ -1,8 +1,9 @@
 'use client';
 
-import { useState ,useEffect} from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import {useAuth} from '@/context/AuthContext';
 
 export default function Login() {
   const router = useRouter();
@@ -13,15 +14,36 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  const { refetch } = useAuth(); // already imported
 
-  useEffect(() => {
-  const token = localStorage.getItem('token');
-  const user = localStorage.getItem('user');
+const handleLogin = async (e) => {
+  e.preventDefault();
+  setLoading(true);
+  setError('');
 
-  if (token && user) {
-    const parsedUser = JSON.parse(user);
+  try {
+    const loginRes = await fetch('http://localhost:5000/api/auth/login', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        username: loginUsername,
+        password: loginPassword
+      }),
+    });
 
-    switch (parsedUser.role) {
+    const loginData = await loginRes.json();
+
+    if (!loginData.success) {
+      throw new Error(loginData.message || 'Login failed');
+    }
+
+    // 🔥 CRITICAL LINE
+    await refetch();  // ✅ update AuthContext
+
+    const currentUser = loginData.user;
+
+    switch (currentUser.role) {
       case 'admin':
         router.replace('/admin-dashboard');
         break;
@@ -35,70 +57,21 @@ export default function Login() {
         router.replace('/branch-dashboard');
         break;
       default:
-        router.replace('/dashboard');
+        throw new Error('Invalid user role');
     }
+
+  } catch (err) {
+    setError(err.message);
+  } finally {
+    setLoading(false);
   }
-}, [router]);
+};
 
-
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-
-    try {
-      const res = await fetch('http://localhost:5000/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          username: loginUsername,
-          password: loginPassword
-        }),
-      });
-
-      const data = await res.json();
-
-      if (!data.success) {
-        throw new Error(data.message || 'Login failed');
-      }
-
-      // Store user data
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
-      
- 
-      
-      if (data.user.linkedId) {
-        localStorage.setItem('linkedId', data.user.linkedId);
-      }
-
-      // Role-based redirection
-      switch (data.user.role) {
-        case 'admin':
-          router.push('/admin-dashboard');
-          break;
-        case 'teacher':
-          router.push('/teacher-dashboard');
-          break;
-        case 'student':
-          router.push('/student-dashboard');
-          break;
-        case 'branchadmin':
-          router.push('/branch-dashboard');
-          break;
-        default:
-          router.push('/dashboard');
-      }
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <div className="min-h-screen flex">
-      {/* LEFT SIDE IMAGE */}
+      
+      {/* LEFT SIDE */}
       <div className="hidden md:flex w-1/2 relative">
         <img
           src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f"
@@ -113,85 +86,64 @@ export default function Login() {
         </div>
       </div>
 
-      {/* RIGHT SIDE FORM */}
-      <div className="flex w-full md:w-1/2 items-center justify-center bg-linear-to-br from-amber-50 to-orange-100 p-6">
-        <div className="w-full max-w-md backdrop-blur-lg bg-white/80 shadow-2xl rounded-2xl p-8 border border-white/30">
-          {/* Header */}
+      {/* RIGHT SIDE */}
+      <div className="flex w-full md:w-1/2 items-center justify-center bg-gradient-to-linear from-amber-50 to-orange-100 p-6">
+        <div className="w-full max-w-md bg-white shadow-xl rounded-2xl p-8">
+
           <div className="text-center mb-6">
-            <h2 className="text-3xl font-bold text-gray-800">SL</h2>
-            <p className="text-gray-600">Attendance System</p>
+            <h2 className="text-3xl font-bold">SL</h2>
+            <p className="text-gray-500">Attendance System</p>
           </div>
 
-          {/* Login Title */}
-          <h3 className="text-xl font-semibold text-gray-700 mb-4 text-center">
-            Login to Your Account
+          <h3 className="text-lg font-semibold text-center mb-4">
+            Login to your account
           </h3>
 
-          {/* Error Message */}
           {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm">
+            <div className="mb-4 p-3 bg-red-100 text-red-600 rounded">
               {error}
             </div>
           )}
 
           <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <input
-                type="text"
-                placeholder="Username"
-                value={loginUsername}
-                onChange={(e) => setLoginUsername(e.target.value)}
-                className="w-full p-3 rounded-lg border border-gray-300 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 outline-none text-black font-medium placeholder:text-gray-400 transition-all"
-                required
-                disabled={loading}
-              />
-            </div>
+
+            <input
+              type="text"
+              placeholder="Username"
+              value={loginUsername}
+              onChange={(e) => setLoginUsername(e.target.value)}
+              className="w-full p-3 border rounded-lg"
+              required
+              disabled={loading}
+            />
 
             <div className="relative">
               <input
-                type={showLoginPassword ? "text" : "password"}
+                type={showLoginPassword ? 'text' : 'password'}
                 placeholder="Password"
                 value={loginPassword}
                 onChange={(e) => setLoginPassword(e.target.value)}
-                className="w-full p-3 rounded-lg border border-gray-300 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 outline-none text-black font-medium placeholder:text-gray-400 transition-all pr-12"
+                className="w-full p-3 border rounded-lg pr-10"
                 required
                 disabled={loading}
               />
               <button
                 type="button"
                 onClick={() => setShowLoginPassword(!showLoginPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-amber-600 transition-colors"
-                disabled={loading}
+                className="absolute right-3 top-1/2 -translate-y-1/2"
               >
-                {showLoginPassword ? <FaEyeSlash size={20} /> : <FaEye size={20} />}
+                {showLoginPassword ? <FaEyeSlash /> : <FaEye />}
               </button>
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-amber-500 hover:bg-amber-600 text-white py-3 rounded-lg transition font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full bg-amber-500 text-white py-3 rounded-lg"
             >
-              {loading ? (
-                <>
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Logging in...
-                </>
-              ) : (
-                'Login'
-              )}
+              {loading ? 'Logging in...' : 'Login'}
             </button>
 
-            {/* Forgot Password link */}
-            <div className="text-center mt-2">
-              <button
-                type="button"
-                onClick={() => alert('Please contact your administrator to reset your password.')}
-                className="text-sm text-amber-600 hover:text-amber-700 hover:underline"
-              >
-                Forgot Password?
-              </button>
-            </div>
           </form>
         </div>
       </div>

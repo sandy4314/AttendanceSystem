@@ -6,6 +6,8 @@ import { apiRequest } from '../../../services/api';
 import { useRouter } from 'next/navigation';
 import {Plus,Edit,Trash2,Search,X,AlertCircle,Phone,Eye,IndianRupee} from 'lucide-react';
 import Pagination from '@/components/Pagination';
+import {useAuth} from '@/components/AuthContext';
+
 
 export default function BranchTeachers() {
   const router = useRouter();
@@ -24,8 +26,11 @@ export default function BranchTeachers() {
  
   const [debouncedSearch, setDebouncedSearch] = useState('');
   
+  const {user,loading:authLoading}= useAuth();
+
 
   const limit=5;
+
 
    const [formData, setFormData] = useState({
     fullName: '',
@@ -47,8 +52,13 @@ export default function BranchTeachers() {
 
 
   useEffect(()=>{
-    fetchTeachers();
-  },[page,debouncedSearch])
+    if(user){
+
+        fetchTeachers();
+
+    }
+    
+  },[page,debouncedSearch,user])
 
   const fetchTeachers = async () => {
   try {
@@ -56,15 +66,13 @@ export default function BranchTeachers() {
     setLoading(true);
     setError("");
 
-    const storedBranch=JSON.parse(localStorage.getItem('user')     || '{}');
+    if(user){
 
-    console.log(storedBranch);
-      if (!storedBranch.linkedId) {
-        console.error('No linkedId found in user data');
-        return;
-      }
 
-    let url=`/assignbranch/branch/${storedBranch.linkedId}?page=${page}&limit=${limit}`;
+      let url=`/assignbranch/branch/${user.linkedId}?page=${page}&limit=${limit}`;
+    
+    }
+
     
     if (debouncedSearch !== '') {
         url += `&search=${debouncedSearch}`;

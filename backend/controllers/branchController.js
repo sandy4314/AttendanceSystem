@@ -113,6 +113,7 @@ exports.getBranches = async (req, res) => {
 
     // paginated data
     const branches = await Branch.find(filter)
+      .populate('user','username')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
@@ -212,7 +213,7 @@ exports.updateBranch = async (req, res) => {
     
     const branch = await Branch.findOneAndUpdate(
       { _id: req.params.id},
-      { schoolName, branchName, location,status },
+      {  branchName, location,status },
       { new: true }
     );
 

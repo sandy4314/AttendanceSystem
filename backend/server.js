@@ -3,6 +3,9 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const app = express();
+const cookieParser = require('cookie-parser');
+
+app.use(cookieParser());
 
 app.use(cors({
   origin: ['http://localhost:3000'],
@@ -13,7 +16,7 @@ app.use(cors({
 
 app.use(express.json());
 
-
+app.disable('etag'); // 🔥 disables 304 completely
 
 
 mongoose.connect(process.env.MONGODB_URI)

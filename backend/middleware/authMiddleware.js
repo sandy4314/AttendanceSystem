@@ -8,16 +8,34 @@ exports.protect=async (req,res,next)=>{
         token=req.headers.authorization.split(' ')[1];
     }
 
+    if (!token && req.cookies && req.cookies.token) {
+    token = req.cookies.token;
+
+    }
+
     if(!token){
           return res.status(401).json({ message: 'Not authorized, no token' });
     }
 
+    console.log("Cookies:", req.cookies);
+
     try{
 
-        
-        const decoded=jwt.verify(token,process.env.JWT_SECRET);
-        req.user=await User.findById(decoded.id).select('-password');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+        const user = await User.findById(decoded.id).select('-password');
+
+        console.log(decoded);
+        console.log(user);
+
+        if (!user) {
+        return res.status(401).json({ message: 'User no longer exists' });
+        }
+
+        req.user = user;
+
         next();
+        
 
     }catch(err){
 

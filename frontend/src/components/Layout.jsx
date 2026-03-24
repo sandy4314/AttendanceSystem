@@ -1,13 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import ProtectedRoute from './ProtectedRoute';
 import AdminSidebar from './AdminSidebar';
 import TeacherSidebar from './TeacherSidebar';
 import StudentSidebar from './StudentSidebar';
 import BranchAdminSidebar from './BranchAdminSidebar';
+import { useAuth } from '@/context/AuthContext'; // 🔥 use context
 
-// Sidebar mapping
 const sidebarMap = {
   admin: AdminSidebar,
   teacher: TeacherSidebar,
@@ -15,32 +14,11 @@ const sidebarMap = {
   branchadmin: BranchAdminSidebar
 };
 
+export default function Layout({ children }) {
+  const { user, loading } = useAuth(); // ✅ single source of truth
 
-export default function Layout({ children, role }) {
-  const [finalRole, setFinalRole] = useState(null);
-
-  useEffect(() => {
-    let detectedRole = role;
-
-    // ✅ If role not passed → get from localStorage.user
-    if (!detectedRole) {
-      try {
-        const user = JSON.parse(localStorage.getItem('user'));
-        detectedRole = user?.role;
-      } catch (err) {
-        console.error('Error parsing user:', err);
-      }
-    }
-
-    // ✅ Normalize
-    if (detectedRole) {
-      detectedRole = detectedRole.toLowerCase().trim();
-    }
-    setFinalRole(detectedRole);
-  }, [role]);
-
-  // ⏳ Loading state
-  if (!finalRole) {
+  // ⏳ Loading
+  if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
         Loading...
@@ -48,30 +26,39 @@ export default function Layout({ children, role }) {
     );
   }
 
-  const Sidebar = sidebarMap[finalRole];
+  // ❌ Unauthorized
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center h-screen text-red-500">
+        Unauthorized
+      </div>
+    );
+  }
 
-  // ❌ Invalid role fallback
+  const role = user.role?.toLowerCase().trim();
+  const Sidebar = sidebarMap[role];
+
+  // ❌ Invalid role
   if (!Sidebar) {
     return (
       <div className="flex items-center justify-center h-screen text-red-500 text-xl">
-        Invalid role: {finalRole}
+        Invalid role: {role}
       </div>
     );
   }
 
   return (
-    <ProtectedRoute role={finalRole}>
+    <ProtectedRoute role={role}>
       <div className="min-h-screen bg-gray-100">
 
-        {/* Sidebar */}
         <Sidebar />
 
-        {/* Main Content */}
         <div className="pl-64 min-h-screen">
           <div className="p-6 md:p-8">
             {children}
           </div>
         </div>
+
       </div>
     </ProtectedRoute>
   );

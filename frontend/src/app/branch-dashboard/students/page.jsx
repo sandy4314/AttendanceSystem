@@ -5,6 +5,8 @@ import { useState, useEffect } from 'react';
 import { apiRequest } from '../../../services/api';
 import {Building,Plus,Edit,Trash2,Search,X,BookOpen,AlertCircle,Eye,Phone,UserCircle,ChevronDown,RefreshCw,Copy,CheckCircle,User,Lock,Key} from 'lucide-react';
 import Pagination from '@/components/Pagination';
+import {useAuth} from '@/components/AuthContext';
+
 
 export default function StudentsPage() {
   const [students, setStudents] = useState([]);
@@ -38,6 +40,9 @@ export default function StudentsPage() {
   const [debouncedSearch, setDebouncedSearch] = useState('');
 
   const LIMIT = 5;
+
+  const {user,loading:authLoading}= useAuth();
+
 
   // Form state for create/edit modal - MATCHING BACKEND SCHEMA
   const [formData, setFormData] = useState({
@@ -582,16 +587,19 @@ const filterSectionsByClass = async (classId)=>{
     setPage(1);
   }, [selectedBranch, selectedClass, selectedSection]);
   
+  
+
   useEffect(()=>{
-    const storedBranch=JSON.parse(localStorage.getItem('user')  || '{}');
-    console.log(storedBranch);
-        if (!storedBranch.linkedId) {
+    if(user)
+      {
+        if (!user.linkedId) {
           console.error('No linkedId found in user data');
           return;
         }
-    setSelectedBranch(storedBranch.linkedId);
+        setSelectedBranch(user.linkedId);
+    }
 
-  },[])
+  },[user]);
   
 
 

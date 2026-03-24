@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { apiRequest } from '../../../services/api';
 import {BookOpen,Plus,Trash2,Search,X,AlertCircle,RefreshCw,ChevronDown,User,Building,Layers,Grid} from 'lucide-react';
 import Pagination from '@/components/Pagination';
+import {useAuth} from '@/components/AuthContext';
 
 export default function AssignSubjectPage() {
   const [assignments, setAssignments] = useState([]);
@@ -40,6 +41,9 @@ export default function AssignSubjectPage() {
   const [debouncedSearch, setDebouncedSearch] = useState('');
 
   const limit=5;
+
+  const {user,loading:authLoading}= useAuth();
+
   
   // Form state
   const [formData, setFormData] = useState({
@@ -78,15 +82,16 @@ export default function AssignSubjectPage() {
 
 
   useEffect(()=>{
-    const storedBranch=JSON.parse(localStorage.getItem('user')  || '{}');
-    console.log(storedBranch);
-        if (!storedBranch.linkedId) {
+    if(user)
+      {
+        if (!user.linkedId) {
           console.error('No linkedId found in user data');
           return;
         }
-    setSelectedBranch(storedBranch.linkedId);
+        setSelectedBranch(user.linkedId);
+    }
 
-  },[]);
+  },[user]);
 
   const fetchInitialData = async () => {
     setLoading(true);

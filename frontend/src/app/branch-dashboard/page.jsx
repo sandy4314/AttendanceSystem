@@ -4,13 +4,15 @@ import Layout from '../../components/Layout';
 import { useState, useEffect } from 'react';
 import { apiRequest } from '../../services/api';
 import { Building, BookOpen, Layers, Users, GraduationCap, RefreshCw } from 'lucide-react';
+import { useAuth } from "@/context/AuthContext";
 
 export default function BranchDashboard() {
   
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [branchInfo, setBranchInfo] = useState(null);
-  const [user, setUser] = useState(null);
+
+  const {user,loading:authLoading }=useAuth();
 
   const [stats, setStats] = useState({
     totalClasses: 0,
@@ -19,19 +21,7 @@ export default function BranchDashboard() {
     totalTeachers: 0,
   });
 
-  useEffect(() => {
-    try {
-      const userStr = localStorage.getItem('user');
-      if (userStr) {
-        const userData = JSON.parse(userStr);
-        console.log('Branch Admin User:', userData);
-        setUser(userData);
-      }
-    } catch (err) {
-      console.error('Error parsing user:', err);
-      setError('Failed to load user data');
-    }
-  }, []);
+  
   
   useEffect(() => {
     if (user) {
@@ -92,7 +82,7 @@ export default function BranchDashboard() {
     fetchDashboardData();
   };
 
-  if (loading) {
+  if (loading || authLoading) {
     return (
       <Layout>
         <div className="min-h-screen flex items-center justify-center">
@@ -103,6 +93,16 @@ export default function BranchDashboard() {
             </div>
             <p className="text-sm text-gray-500">Fetching your branch data</p>
           </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (!user) {
+    return (
+      <Layout>
+        <div className="text-center text-red-500">
+          Unauthorized
         </div>
       </Layout>
     );
