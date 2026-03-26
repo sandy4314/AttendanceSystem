@@ -6,7 +6,7 @@ import { apiRequest } from '../../../services/api';
 import {Building,Plus,Edit,Trash2,Search,X,AlertCircle,Eye,User,ChevronDown} from 'lucide-react';
 import Pagination from '@/components/Pagination';
 
-import{useAuth} from '@/components/AuthContext';
+import {useAuth} from '@/context/AuthContext';
 
 
 export default function ClassesPage() {

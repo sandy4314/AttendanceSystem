@@ -15,18 +15,14 @@ export default function ProtectedRoute({ children, role }) {
   }, [user, loading]);
   
 
-  
- 
   if (loading) {
     return <div className="flex justify-center items-center h-screen">Loading...</div>;
   }
 
   if (!user) return null;
 
-
   if (role && user.role !== role) {
     return <div className="text-red-500">Unauthorized</div>;
   }
-
   return children;
 }

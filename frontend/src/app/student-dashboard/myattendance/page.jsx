@@ -1,15 +1,17 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-// import { apiRequest } from '../../services/api';
 import { useRouter } from 'next/navigation';
 import { User, Phone, BookOpen, Users } from 'lucide-react';
+// import { apiRequest } from '../../services/api';
 import Layout from '@/components/Layout';
 import { apiRequest } from '@/services/api';
+import {useAuth} from '@/context/AuthContext';
 
 
 export default function MyAttendance(){
     const [data,setData]=useState([]);
+    const {user,loading:authLoading}= useAuth();
     const [userid,setUserId]=useState('');
     const [uniquedates,setUniqueDates]=useState([]);
     const [newdata,setNewData]=useState({});
@@ -33,31 +35,19 @@ export default function MyAttendance(){
             ];
 
     
-     
-    useEffect(() => {
-        const user = JSON.parse(localStorage.getItem("user"));
-        console.log(user?.linkedId);
-        setUserId(user.linkedId);
-    
-    }, []);
 
     
     useEffect(()=>{
-
-        if(userid && year && month){
+        if(user && year && month){
             GetAttendance();
         }
-
-    },[userid,year,month]);
-
-    
+    },[user,year,month]);
 
     const GetAttendance=async()=>{
         try
         {
-       
         const attendance = await apiRequest(
-        `/attendance/student/${userid}?year=${year}&month=${month}`
+        `/attendance/student/${user.linkedId}?year=${year}&month=${month}`
         );
 
         setData(attendance.data);

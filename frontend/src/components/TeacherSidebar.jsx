@@ -25,10 +25,15 @@ export default function TeacherSidebar() {
   const pathname = usePathname();
   const router = useRouter();
 
-  const handleLogout = () => {
-    localStorage.clear();
-    router.push('/');
-  };
+  const handleLogout = async () => {
+    
+  await fetch('http://localhost:5000/api/auth/logout', {
+    method: 'POST',
+    credentials: 'include',
+  });
+
+  router.push('/');
+};
 
   const menuItems = [
     { href: '/teacher-dashboard', icon: <LayoutDashboard size={20} />, label: 'Dashboard' },

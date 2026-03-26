@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { apiRequest } from '../../../services/api';
 import {BookOpen,Plus,Trash2,Search,X,AlertCircle,RefreshCw,ChevronDown,User,Building,Layers,Grid} from 'lucide-react';
 import Pagination from '@/components/Pagination';
-import {useAuth} from '@/components/AuthContext';
+import {useAuth} from '@/context/AuthContext';
 
 export default function AssignSubjectPage() {
   const [assignments, setAssignments] = useState([]);

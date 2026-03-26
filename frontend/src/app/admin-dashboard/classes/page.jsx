@@ -51,16 +51,12 @@ export default function ClassesPage() {
   fetchClasses(page);
 }, [page, selectedBranch,debouncedSearch]);
 
-
-  
-
   const fetchClasses = async (pageNumber = 1) => {
   try {
     setLoading(true);
     setError("");
 
     let url = `/classes?page=${pageNumber}&limit=5`;
-
     if (selectedBranch !== "all") {
       url += `&branchId=${selectedBranch}`;
     }

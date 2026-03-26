@@ -5,9 +5,11 @@ import { apiRequest } from '../../services/api';
 import { useRouter } from 'next/navigation';
 import { User, Phone, BookOpen, Users } from 'lucide-react';
 import Layout from '../../components/Layout';
+import {useAuth} from '@/context/AuthContext';
 
 export default function StudentDashboard() {
   const router = useRouter();
+  const {user,loading:authLoading}= useAuth();
   const [loading, setLoading] = useState(true);
   const [studentData, setStudentData] = useState({
     fullName: '',
@@ -21,20 +23,16 @@ export default function StudentDashboard() {
   });
 
   useEffect(() => {
+    if(user){
     fetchStudentData();
-  }, []);
+    }
+  }, [user]);
 
   const fetchStudentData = async () => {
     try {
       setLoading(true);
-      const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
-      
-      if (!storedUser.linkedId) {
-        console.error('No linkedId found in user data');
-        return;
-      }
-      
-      const response = await apiRequest(`/students/${storedUser.linkedId}`, {
+
+      const response = await apiRequest(`/students/${user.linkedId}`, {
         method: 'GET'
       });
 
