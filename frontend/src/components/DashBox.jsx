@@ -1,6 +1,6 @@
 "use client";
 
-export default function DashBox({icon,color,title,value}){
+export default function DashBox({title,value,icon,color}){
 
     return (
     <div className={`bg-white p-6 rounded-xl shadow border-l-4 ${color} relative overflow-hidden hover:shadow-lg transition`}>

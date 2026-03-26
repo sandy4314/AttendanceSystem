@@ -3,9 +3,10 @@
 import Layout from "@/components/Layout";
 import { useEffect, useState, useCallback } from "react";
 import { apiRequest } from "@/services/api";
+import {useAuth} from '@/context/AuthContext';
 
 export default function MarkAttendance() {
-
+  const {user,loading:authLoading}= useAuth();
   const [assignments, setAssignments] = useState([]);
   const [selectedAssignment, setSelectedAssignment] = useState(null);
   const [students, setStudents] = useState([]);
@@ -22,14 +23,13 @@ export default function MarkAttendance() {
 
   
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem("user"));
-    if (!user?.linkedId) return;
-
+    if(user){
     apiRequest(`/assignsubject/teacher/${user.linkedId}`)
       .then(res => {
         if (res?.success) setAssignments(res.data || []);
       });
-  }, []);
+    }
+  }, [user]);
 
   
   const loadStudents = useCallback(async (assignment) => {

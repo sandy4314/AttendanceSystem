@@ -6,7 +6,7 @@ import { apiRequest } from '../../../services/api';
 import { useRouter } from 'next/navigation';
 import {Plus,Edit,Trash2,Search,X,AlertCircle,Phone,Eye,IndianRupee} from 'lucide-react';
 import Pagination from '@/components/Pagination';
-import {useAuth} from '@/components/AuthContext';
+import {useAuth} from '@/context/AuthContext';
 
 
 export default function BranchTeachers() {

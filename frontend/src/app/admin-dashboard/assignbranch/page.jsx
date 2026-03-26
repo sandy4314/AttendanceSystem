@@ -3,125 +3,105 @@
 import Layout from '../../../components/Layout';
 import { useState, useEffect } from 'react';
 import { apiRequest } from '../../../services/api';
-
-import {Building,Plus,Edit,Trash2,Search,X,AlertCircle,Eye,User,ChevronDown,RefreshCw,BookOpen} from 'lucide-react';
-
+import { Building, Plus, Edit, Trash2, Search, X, AlertCircle, Eye, User, ChevronDown, RefreshCw, BookOpen } from 'lucide-react';
 import Pagination from '@/components/Pagination';
 
 
-export default function AssignBranch(){
+export default function AssignBranch() {
 
-    const [branches, setBranches] = useState([]);
-    const [teachers, setTeachers] = useState([]);
-    const [assignments,setAssignment]=useState([]);
-    const [searchTerm, setSearchTerm] = useState('');
-    const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [branches, setBranches] = useState([]);
+  const [teachers, setTeachers] = useState([]);
+  const [assignments, setAssignment] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
 
+  const [selectedBranch, setSelectedBranch] = useState('all');
+  const [selectedTeacher, setSelectedTeacher] = useState('all');
 
-    const [selectedBranch, setSelectedBranch] = useState('all');
-    const [selectedTeacher,setSelectedTeacher]=useState('all');
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
+  const [showModal, setShowModal] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-    const [page,setPage]=useState(1);
-    const [totalPages,setTotalPages]=useState(1);
+  const [formData, setFormData] = useState({
+    branch: "",
+    teacher: "",
+  });
+  const limit = 5;
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+    }, 1000);
 
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState('');
-    const [successMessage, setSuccessMessage] = useState('');
-    const [showModal, setShowModal] = useState(false);
-    const [submitting, setSubmitting] = useState(false);
-
-    const [formData,setFormData]=useState({
-        branch:"",
-        teacher:"",
-    });
-    const limit=5;
-
-
-
-    useEffect(() => {
-      const timer = setTimeout(() => {
-        setDebouncedSearch(searchTerm);
-      }, 1000);
-    
-      return () => clearTimeout(timer);
-    }, [searchTerm]);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
 
-    useEffect(() => {
+  useEffect(() => {
 
     fetchAssignments();
-    }, [page, debouncedSearch,selectedBranch]);
+  }, [page, debouncedSearch, selectedBranch]);
 
 
-    const handleRetry = () => {
-        setError('');
-        fetchAssignments();
+  const handleRetry = () => {
+    setError('');
+    fetchAssignments();
 
-    };
+  };
 
-    useEffect(() => {
-        fetchBranches();
-        fetchTeachers();
-        
-
-        }, []);
+  useEffect(() => {
+    fetchBranches();
+    fetchTeachers();
+  }, []);
 
 
-    const fetchAssignments=async()=>{
+  const fetchAssignments = async () => {
 
-        try
+    try {
+      setLoading(true);
+      let url = `/assignbranch?&limit=${limit}&page=${page}`;
 
-        {
-        
-        setLoading(true);
-        let url=`/assignbranch?&limit=${limit}&page=${page}`;
+      if (debouncedSearch != '') {
+        url += `&search=${debouncedSearch}`;
+      }
 
-        if(debouncedSearch!=''){
-            url+=`&search=${debouncedSearch}`;
-        }
+      if (selectedBranch !== 'all') {
+        url += `&branch=${selectedBranch}`;
+      }
 
-        if (selectedBranch !== 'all') {
+      const response = await apiRequest(url);
+      if (response && response.success) {
+        setAssignment(response.data);
+        setTotalPages(response.totalPages);
+      }
 
-            url += `&branch=${selectedBranch}`;
-
-        }
-
-        const response=await apiRequest(url);
-        if(response && response.success){
-            setAssignment(response.data);
-            setTotalPages(response.totalPages);
-        }
-
-        else{
-            setAssignment([]);
-            setTotalPages(1);
-        }
-
-
+      else {
+        setAssignment([]);
+        setTotalPages(1);
+      }
     }
 
-    catch(err){
-        console.error('Error fetching assignments:', err);
+    catch (err) {
+      console.error('Error fetching assignments:', err);
     }
 
     finally {
       setLoading(false);
     }
+  }
 
-
-}
-
-
-
-const fetchTeachers = async () => {
+  const fetchTeachers = async () => {
     try {
       const response = await apiRequest('/teachers/all');
-      if (response && response.success){ 
+      if (response && response.success) {
         setTeachers(response.data);
       }
-      else{
+      else {
         setTeachers([]);
       }
     } catch (error) {
@@ -130,8 +110,7 @@ const fetchTeachers = async () => {
     }
   };
 
-
-const fetchBranches = async () => {
+  const fetchBranches = async () => {
     try {
       const response = await apiRequest('/branches/all');
       if (response && response.success) {
@@ -142,8 +121,6 @@ const fetchBranches = async () => {
     }
   };
 
-
-  
   const handleInputChange = async (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -154,8 +131,7 @@ const fetchBranches = async () => {
 
   };
 
-
-const refreshTeachersAndBranches = async () => {
+  const refreshTeachersAndBranches = async () => {
     try {
       await Promise.all([
         fetchTeachers(),
@@ -166,37 +142,30 @@ const refreshTeachersAndBranches = async () => {
     }
   };
 
-
-const openCreateModal = async () => {
+  const openCreateModal = async () => {
     await refreshTeachersAndBranches();
     setFormData({
       teacher: '',
-    
       branch: '',
-      
     });
-   
     setError('');
     setShowModal(true);
   };
-
 
   const validateForm = () => {
     if (!formData.teacher) {
       setError('Please select a teacher');
       return false;
     }
-    
     if (!formData.branch) {
       setError('Please select a branch');
       return false;
     }
-    
     return true;
   };
 
 
-const handleSubmit = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) {
       return;
@@ -211,20 +180,20 @@ const handleSubmit = async (e) => {
         body: JSON.stringify(formData)
       });
       if (response && response.success) {
-          setSuccessMessage('Branch assigned successfully!');
-          await fetchAssignments();
+        setSuccessMessage('Branch assigned successfully!');
+        await fetchAssignments();
 
-          await refreshTeachersAndBranches();
-          setTimeout(() => {
-            setShowModal(false);
-            setSuccessMessage('');
-          }, 1500);
-        }
-         else {
-          setError(response.message || 'Failed to assign subject');
-        }
-      } 
-      catch (error) {
+        await refreshTeachersAndBranches();
+        setTimeout(() => {
+          setShowModal(false);
+          setSuccessMessage('');
+        }, 1500);
+      }
+      else {
+        setError(response.message || 'Failed to assign subject');
+      }
+    }
+    catch (error) {
       console.error('Error assigning subject:', error);
       if (error.message?.includes('already exists')) {
         setError('This assignment already exists!');
@@ -246,34 +215,31 @@ const handleSubmit = async (e) => {
     return typeof teacher === 'object' ? teacher.fullName : 'Unknown';
   };
 
-  const getBranchLoc = (branch)=>{
-    if(!branch) return 'N/A';
+  const getBranchLoc = (branch) => {
+    if (!branch) return 'N/A';
     return typeof branch === 'object' ? branch.location : "Unknown";
   }
 
-
   const handleDelete = async (id) => {
-      if (!confirm('Are you sure you want to remove this assignment? This action cannot be undone.')) return;
-      try {
-        const response = await apiRequest(`/assignbranch/${id}`, {
-          method: 'DELETE'
-        });
-        if (response?.success || response?.message === 'Deleted successfully') {
-          setSuccessMessage('Assignment Deactviated successfully!');
-          await fetchAssignments();
-          setTimeout(() => setSuccessMessage(''), 3000);
-        } else {
-          setError(response?.message || 'Delete failed');
-        }
-      } catch (error) {
-        console.error('Error deleting assignment:', error);
-        setError(error.message || 'Error deleting assignment. Please try again.');
+    if (!confirm('Are you sure you want to remove this assignment? This action cannot be undone.')) return;
+    try {
+      const response = await apiRequest(`/assignbranch/${id}`, {
+        method: 'DELETE'
+      });
+      if (response?.success || response?.message === 'Deleted successfully') {
+        setSuccessMessage('Assignment Deactviated successfully!');
+        await fetchAssignments();
+        setTimeout(() => setSuccessMessage(''), 3000);
+      } else {
+        setError(response?.message || 'Delete failed');
       }
-    };
-  
-    
+    } catch (error) {
+      console.error('Error deleting assignment:', error);
+      setError(error.message || 'Error deleting assignment. Please try again.');
+    }
+  };
 
-if (loading && assignments.length === 0) {
+  if (loading && assignments.length === 0) {
     return (
       <Layout>
         <div className="min-h-screen flex items-center justify-center">
@@ -298,7 +264,6 @@ if (loading && assignments.length === 0) {
       </Layout>
     )
   }
-
 
   return (
     <Layout>
@@ -346,9 +311,9 @@ if (loading && assignments.length === 0) {
           <span>{successMessage}</span>
         </div>
       )}
-       
-    
-    <div className="mb-6 grid grid-cols-1 md:grid-cols-6 gap-4">
+
+
+      <div className="mb-6 grid grid-cols-1 md:grid-cols-6 gap-4">
         {/* Branch Filter */}
         <div className="relative">
           <select
@@ -372,82 +337,78 @@ if (loading && assignments.length === 0) {
             type="text"
             placeholder="Search by teacher.."
             value={searchTerm}
-            onChange={(e) => {setSearchTerm(e.target.value);setPage(1)}}
+            onChange={(e) => { setSearchTerm(e.target.value); setPage(1) }}
             className="w-full pl-10 pr-4 py-2 border border-gray-300 text-black rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none"
           />
         </div>
-    </div>
+      </div>
 
-    <div className="bg-white rounded-xl shadow overflow-hidden">
-            <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Teacher</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Branch</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
+      <div className="bg-white rounded-xl shadow overflow-hidden">
+        <table className="w-full">
+          <thead className="bg-gray-50 border-b border-gray-200">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Teacher</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Branch</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200">
+            {assignments.length > 0 ? (
+              assignments.map((assignment, index) => (
+                <tr key={assignment._id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 text-sm text-gray-900">{(page - 1) * limit + index + 1}</td>
+                  <td className="px-6 py-4 text-sm text-gray-900">
+                    <div className="flex items-center gap-1">
+                      <User size={16} className="text-gray-500" />
+                      {getTeacherName(assignment.teacher)}
+                    </div>
+                  </td>
 
+                  <td className="px-6 py-4 text-sm text-gray-900">
+                    <div className="flex items-center gap-1">
+                      <BookOpen size={16} className="text-gray-500" />
+                      {getBranchName(assignment.branch)}
+                    </div>
+                  </td>
+
+                  <td className="px-6 py-4 text-sm text-gray-900">
+                    <div className="flex items-center gap-1">
+                      <Building size={16} className="text-gray-500" />
+                      {getBranchLoc(assignment.branch)}
+                    </div>
+                  </td>
+
+                  <td className="px-6 py-4 text-sm">
+                    <button
+                      onClick={() => handleDelete(assignment._id)}
+                      className="p-1 text-red-600 hover:bg-red-100 rounded transition"
+                      title="Remove Assignment"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {assignments.length > 0 ? (
-                  assignments.map((assignment, index) => (
-                    <tr key={assignment._id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 text-sm text-gray-900">{(page - 1) * limit + index + 1}</td>
-                      <td className="px-6 py-4 text-sm text-gray-900">
-                        <div className="flex items-center gap-1">
-                          <User size={16} className="text-gray-500" />
-                          {getTeacherName(assignment.teacher)}
-                        </div>
-                      </td>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="7" className="px-6 py-8 text-center text-gray-500">
+                  {searchTerm
+                    ? 'No assignments match your search criteria.'
+                    : 'No assignments found. Click "Assign Subject" to create one.'}
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
 
-                      <td className="px-6 py-4 text-sm text-gray-900">
-                        <div className="flex items-center gap-1">
-                        <BookOpen size={16} className="text-gray-500" />
-                        {getBranchName(assignment.branch)}
-                        </div>
-                    </td>
-                      
-                      <td className="px-6 py-4 text-sm text-gray-900">
-                        <div className="flex items-center gap-1">
-                          <Building size={16} className="text-gray-500" />
-                          {getBranchLoc(assignment.branch)}
-                        </div>
-                      </td>
-                    
+      <div>
+        <Pagination totalPages={totalPages} setPage={setPage} page={page} />
+      </div>
 
-
-                      <td className="px-6 py-4 text-sm">
-                        <button
-                          onClick={() => handleDelete(assignment._id)}
-                          className="p-1 text-red-600 hover:bg-red-100 rounded transition"
-                          title="Remove Assignment"
-                        >
-                          <Trash2 size={18} />
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="7" className="px-6 py-8 text-center text-gray-500">
-                      {searchTerm
-                        ? 'No assignments match your search criteria.'
-                        : 'No assignments found. Click "Assign Subject" to create one.'}
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          <div>
-                  <Pagination totalPages={totalPages} setPage={setPage} page={page}/>
-          </div>
-
-
-
-                {/* CREATE ASSIGNMENT MODAL */}
+      {/* CREATE ASSIGNMENT MODAL */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 overflow-y-auto">
           <div className="bg-white rounded-xl w-full max-w-2xl p-6 m-4">
@@ -521,9 +482,9 @@ if (loading && assignments.length === 0) {
                     </p>
                   )}
                 </div>
-                </div>
+              </div>
 
-            <div className="flex justify-end gap-3 mt-6 pt-4 border-t">
+              <div className="flex justify-end gap-3 mt-6 pt-4 border-t">
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
@@ -548,12 +509,9 @@ if (loading && assignments.length === 0) {
                 </button>
               </div>
             </form>
-            </div>
+          </div>
         </div>
-    )}
-    
+      )}
     </Layout>
-);
+  );
 }
-
-

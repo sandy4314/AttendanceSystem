@@ -1,6 +1,11 @@
 'use client';
-import DashBox from "@/components/DashBox"
 import Layout from '../../components/Layout';
+import dynamic from "next/dynamic";
+const DashboardStats = dynamic(() => import("@/components/DashboardStats"), {
+  loading: () => <p>Loading stats...</p>,
+});
+
+
 import { useState, useEffect } from 'react';
 import { apiRequest } from '../../services/api';
 import { useRouter } from 'next/navigation';
@@ -62,10 +67,7 @@ export default function AdminDashboard() {
         }
 
         setRecentBranches(branches.slice(0, 2));
-        setStats(prev => ({
-          ...prev,
-          totalBranches: branches.length
-        }));
+        setStats(prev => ({...prev,totalBranches: branches.length}));
       }
 
       // Process Teachers
@@ -149,17 +151,54 @@ export default function AdminDashboard() {
   const handleRefresh = () => {
     fetchDashboardData();
   };
+  const adminStatsArray = [
+    {
+      title: "Total Branches",
+      value: stats.totalBranches,
+      icon: <Building className="text-amber-500" size={24} />,
+      color: "border-amber-500"
+    },
+    {
+      title: "Total Classes",
+      value: stats.totalClasses,
+      icon: <BookOpen className="text-blue-500" size={24} />,
+      color: "border-blue-500"
+    },
+    {
+      title: "Total Sections",
+      value: stats.totalSections,
+      icon: <Layers className="text-green-500" size={24} />,
+      color: "border-green-500"
+    },
+    {
+      title: "Total Students",
+      value: stats.totalStudents,
+      icon: <GraduationCap className="text-purple-500" size={24} />,
+      color: "border-purple-500"
+    },
+    {
+      title: "Total Teachers",
+      value: stats.totalTeachers,
+      icon: <Users className="text-orange-500" size={24} />,
+      color: "border-orange-500"
+    },
+    {
+      title: "Total Subjects",
+      value: stats.totalSubjects,
+      icon: <BookMarked className="text-indigo-500" size={24} />,
+      color: "border-indigo-500"
+    }
+  ];
 
   if (loading) {
     return (
       <Layout>
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
-            <div className="flex items-center justify-center space-x-2 mb-4">
+            <div className="flex items-center gap-2 mb-4">
               <div className="w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
-              <span className="text-gray-700">Loading dashboard...</span>
+              <span>Loading dashboard...</span>
             </div>
-            <p className="text-sm text-gray-500">Fetching your data</p>
           </div>
         </div>
       </Layout>
@@ -168,7 +207,7 @@ export default function AdminDashboard() {
 
   return (
     <Layout>
-      {/* HEADER with Refresh Button */}
+      {/* HEADER */}
       <div className="flex justify-between items-center mb-6">
         <div>
           <h2 className="text-3xl font-bold text-gray-900">Dashboard</h2>
@@ -189,39 +228,8 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* STATS GRID */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        <DashBox title="Total Branches"
-          value={stats.totalBranches}
-          color="border-amber-500"
-          icon={<Building className="text-amber-500" size={24} />}
-        />
-        <DashBox title="Total Classes"
-          value={stats.totalClasses}
-          color="border-blue-500"
-          icon={<BookOpen className="text-blue-500" size={24} />}
-        />
-        <DashBox title="Total Sections"
-          value={stats.totalSections}
-          color="border-green-500"
-          icon={<Layers className="text-green-500" size={24} />}
-        />
-        <DashBox title="Total Students"
-          value={stats.totalStudents}
-          color="border-purple-500"
-          icon={<GraduationCap className="text-purple-500" size={24} />}
-        />
-        <DashBox title="Total Teachers"
-          value={stats.totalTeachers}
-          color="border-orange-500"
-          icon={<Users className="text-orange-500" size={24} />}
-        />
-        <DashBox title="Total Subjects"
-          value={stats.totalSubjects}
-          color="border-indigo-500"
-          icon={<BookMarked className="text-indigo-500" size={24} />}
-        />
-      </div>
+      {/* ✅ LAZY LOADED STATS */}
+      <DashboardStats stats={adminStatsArray} />
 
       {/* RECENT ACTIVITY SECTION */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

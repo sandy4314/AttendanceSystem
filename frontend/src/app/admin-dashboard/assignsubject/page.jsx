@@ -3,7 +3,7 @@
 import Layout from '../../../components/Layout';
 import { useState, useEffect } from 'react';
 import { apiRequest } from '../../../services/api';
-import {BookOpen,Plus,Trash2,Search,X,AlertCircle,RefreshCw,ChevronDown,User,Building,Layers,Grid} from 'lucide-react';
+import { BookOpen, Plus, Trash2, Search, X, AlertCircle, RefreshCw, ChevronDown, User, Building, Layers, Grid } from 'lucide-react';
 import Pagination from '@/components/Pagination';
 
 export default function AssignSubjectPage() {
@@ -12,8 +12,6 @@ export default function AssignSubjectPage() {
   const [teachers, setTeachers] = useState([]);
   const [subjects, setSubjects] = useState([]);
   const [branches, setBranches] = useState([]);
- 
-  
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -25,7 +23,7 @@ export default function AssignSubjectPage() {
   const [selectedBranch, setSelectedBranch] = useState('all');
   const [selectedClass, setSelectedClass] = useState('all');
   const [selectedSection, setSelectedSection] = useState('all');
-  
+
   // Filtered options
   const [filteredClasses, setFilteredClasses] = useState([]);
   const [filteredSections, setFilteredSections] = useState([]);
@@ -39,8 +37,8 @@ export default function AssignSubjectPage() {
 
   const [debouncedSearch, setDebouncedSearch] = useState('');
 
-  const limit=5;
-  
+  const limit = 5;
+
   // Form state
   const [formData, setFormData] = useState({
     teacher: '',
@@ -53,30 +51,27 @@ export default function AssignSubjectPage() {
   // Initial data fetch
   useEffect(() => {
 
-  refreshTeachersAndSubjects();
+    refreshTeachersAndSubjects();
 
-  fetchBranches();
-}, []);
-
- useEffect(() => {
-  fetchAssignments();
-}, [page, selectedBranch, selectedClass, selectedSection, debouncedSearch]);
+    fetchBranches();
+  }, []);
 
   useEffect(() => {
-      const timer = setTimeout(() => {
-        setDebouncedSearch(searchTerm);
-      }, 1000);
-    
-      return () => clearTimeout(timer);
-    }, [searchTerm]);
+    fetchAssignments();
+  }, [page, selectedBranch, selectedClass, selectedSection, debouncedSearch]);
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+    }, 1000);
 
-  
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   const fetchInitialData = async () => {
     setLoading(true);
     try {
-      
+
       await fetchAssignments();
 
     } catch (error) {
@@ -94,7 +89,7 @@ export default function AssignSubjectPage() {
       setError('');
       setLoading(true);
 
-      let url=`/assignsubject?&page=${page}&limit=${limit}`;
+      let url = `/assignsubject?&page=${page}&limit=${limit}`;
 
       if (selectedBranch !== "all") {
         url += `&branchId=${selectedBranch}`;
@@ -111,23 +106,20 @@ export default function AssignSubjectPage() {
       if (debouncedSearch !== '') {
 
         url += `&search=${debouncedSearch}`;
-        
+
       }
 
       const response = await apiRequest(url);
-      
-        if (response && response.success) {
 
-          setAssignments(response.data);
-          setTotalPages(response.totalPages || 1);
-        } 
-        else
-        {
-          setAssignments([]);
-          setTotalPages(1);
-          
-        }
-      
+      if (response && response.success) {
+        setAssignments(response.data);
+        setTotalPages(response.totalPages || 1);
+      }
+      else {
+        setAssignments([]);
+        setTotalPages(1);
+      }
+
     } catch (error) {
       console.error('Error fetching assignments:', error);
     }
@@ -139,10 +131,10 @@ export default function AssignSubjectPage() {
   const fetchTeachers = async () => {
     try {
       const response = await apiRequest('/teachers/all');
-      if (response && response.success){ 
+      if (response && response.success) {
         setTeachers(response.data);
       }
-      else{
+      else {
         setTeachers([]);
       }
     } catch (error) {
@@ -155,10 +147,8 @@ export default function AssignSubjectPage() {
   const fetchSubjects = async () => {
     try {
       const response = await apiRequest('/subjects/all');
-     
       if (response && response.success) {
         setSubjects(response.data || []);
-        
       } else {
         setSubjects([]);
       }
@@ -168,7 +158,6 @@ export default function AssignSubjectPage() {
     }
   };
 
-  
 
   const fetchBranches = async () => {
     try {
@@ -188,118 +177,88 @@ export default function AssignSubjectPage() {
       const response = await apiRequest(`/classes?branchId=${branchId}`);
       if (response && response.success) {
         setAvailableClasses(response.data || []);
-        
       } else {
         setAvailableClasses([]);
-        
       }
     } catch (error) {
       console.error("Error fetching classes:", error);
       setAvailableClasses([]);
-      
     }
   };
 
 
-   const fetchSectionsByClass = async (classId) => {
+  const fetchSectionsByClass = async (classId) => {
     try {
       const response = await apiRequest(`/sections/class/${classId}`);
       if (response && response.success) {
         setAvailableSections(response.data || []);
-        
       } else {
         setAvailableSections([]);
-        
       }
     } catch (error) {
       console.error("Error fetching sections:", error);
       setAvailableSections([]);
-      
     }
   };
 
-const filterClassesByBranch = async (branchId)=>{
-
-  try
-  {
-    const response=await apiRequest(`/classes?branchId=${branchId}`);
-    if(response && response.success){
+  const filterClassesByBranch = async (branchId) => {
+    try {
+      const response = await apiRequest(`/classes?branchId=${branchId}`);
+      if (response && response.success) {
         setFilteredClasses(response.data);
-    }else{
+      } else {
+        setFilteredClasses([]);
+      }
+    } catch (err) {
+      console.error("Error fetching classes", err);
       setFilteredClasses([]);
     }
-  }catch(err){
-
-    console.error("Error fetching classes",err);
-    setFilteredClasses([]);
-
-}
-}
+  }
 
 
-const filterSectionsByClass = async (classId)=>{
-
-  try
-  {
-    const response = await apiRequest(`/sections/class/${classId}`);
-    if(response && response.success){
+  const filterSectionsByClass = async (classId) => {
+    try {
+      const response = await apiRequest(`/sections/class/${classId}`);
+      if (response && response.success) {
         setFilteredSections(response.data);
-    }else{
+      } else {
+        setFilteredSections([]);
+      }
+    } catch (err) {
+      console.error("Error fetching sections", err);
       setFilteredSections([]);
     }
-  }catch(err){
+  }
 
-    console.error("Error fetching sections",err);
-    setFilteredSections([]);
-    
-
-}
-}
-
-
-
-  
 
   // Update filtered classes when branch changes
-  
-
   useEffect(() => {
-  const loadClasses = async () => {
-    if (selectedBranch !== "all") {
-      await filterClassesByBranch(selectedBranch);
-    } else {
-      setFilteredClasses([]);
-    }
-
-    setSelectedClass("all");
-    setSelectedSection("all");
-  };
-
-  loadClasses();
-}, [selectedBranch]);
-
-
+    const loadClasses = async () => {
+      if (selectedBranch !== "all") {
+        await filterClassesByBranch(selectedBranch);
+      } else {
+        setFilteredClasses([]);
+      }
+      setSelectedClass("all");
+      setSelectedSection("all");
+    };
+    loadClasses();
+  }, [selectedBranch]);
 
 
   // Update filtered sections when class changes
   useEffect(() => {
-  const loadSections = async () => {
-    if (selectedClass !== "all") {
-      await filterSectionsByClass(selectedClass);
-    } else {
-      setFilteredSections([]);
-    }
+    const loadSections = async () => {
+      if (selectedClass !== "all") {
+        await filterSectionsByClass(selectedClass);
+      } else {
+        setFilteredSections([]);
+      }
+      setSelectedSection("all");
+    };
+    loadSections();
+  }, [selectedClass]);
 
-    setSelectedSection("all");
-  };
-
-  loadSections();
-}, [selectedClass]);
-
-
-
-
- 
 
   const handleInputChange = async (e) => {
     const { name, value } = e.target;
@@ -350,7 +309,6 @@ const filterSectionsByClass = async (classId)=>{
     }
   };
 
-  
 
   const openCreateModal = async () => {
     await refreshTeachersAndSubjects();
@@ -457,8 +415,6 @@ const filterSectionsByClass = async (classId)=>{
     fetchInitialData();
   };
 
-  
-  
 
   const getTeacherName = (teacher) => {
     if (!teacher) return 'N/A';
@@ -615,7 +571,6 @@ const filterSectionsByClass = async (classId)=>{
           <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" size={18} />
         </div>
 
-        
 
         {/* Search Bar */}
         <div className="relative md:col-span-2">
@@ -624,7 +579,7 @@ const filterSectionsByClass = async (classId)=>{
             type="text"
             placeholder="Search by teacher.."
             value={searchTerm}
-            onChange={(e) => {setSearchTerm(e.target.value);setPage(1)}}
+            onChange={(e) => { setSearchTerm(e.target.value); setPage(1) }}
             className="w-full pl-10 pr-4 py-2 border border-gray-300 text-black rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none"
           />
         </div>
@@ -694,7 +649,7 @@ const filterSectionsByClass = async (classId)=>{
       </div>
 
       <div>
-        <Pagination totalPages={totalPages} setPage={setPage} page={page}/>
+        <Pagination totalPages={totalPages} setPage={setPage} page={page} />
       </div>
 
       {/* CREATE ASSIGNMENT MODAL */}

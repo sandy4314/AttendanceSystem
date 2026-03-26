@@ -3,9 +3,8 @@
 import Layout from '../../../components/Layout';
 import { useState, useEffect } from 'react';
 import { apiRequest } from '../../../services/api';
-import {Plus,Edit,Trash2,Lock,Unlock,Search,X,AlertCircle} from 'lucide-react';
+import { Plus, Edit, Trash2, Lock, Unlock, Search, X, AlertCircle } from 'lucide-react';
 import Pagination from '@/components/Pagination';
-
 
 export default function BranchesPage() {
   const [branches, setBranches] = useState([]);
@@ -22,57 +21,52 @@ export default function BranchesPage() {
 
   // Form state
   const [formData, setFormData] = useState({
-    
     branchName: '',
     location: '',
-    username:'',
-    password:'',
+    username: '',
+    password: '',
     status: 'active'
   });
 
-  
 
   useEffect(() => {
-  const timer = setTimeout(() => {
-    setDebouncedSearch(searchTerm);
-  }, 1000);
-
-  return () => clearTimeout(timer);
-}, [searchTerm]);
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
 
   useEffect(() => {
     fetchBranches(page);
-  }, [page,debouncedSearch]);
+  }, [page, debouncedSearch]);
 
-  
 
   const fetchBranches = async (pageNumber = 1) => {
-  try {
-    setLoading(true);
-    setError('');
-    let url=`/branches?page=${pageNumber}&limit=5`;
+    try {
+      setLoading(true);
+      setError('');
+      let url = `/branches?page=${pageNumber}&limit=5`;
 
-    if (debouncedSearch !== '') {
+      if (debouncedSearch !== '') {
         url += `&search=${debouncedSearch}`;
       }
-    const response = await apiRequest(url);
+      const response = await apiRequest(url);
 
-    if (response && response.success) {
-      setBranches(response.data || []);
-      setTotalPages(response.totalPages || 1);
-    } else {
+      if (response && response.success) {
+        setBranches(response.data || []);
+        setTotalPages(response.totalPages || 1);
+      } else {
+        setBranches([]);
+      }
+    } catch (error) {
+      console.error('Error fetching branches:', error);
+      setError('Failed to load branches. Please try again.');
       setBranches([]);
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    console.error('Error fetching branches:', error);
-    setError('Failed to load branches. Please try again.');
-    setBranches([]);
-  } finally {
-    setLoading(false);
-  }
-};
-
+  };
 
 
   const handleInputChange = (e) => {
@@ -86,12 +80,11 @@ export default function BranchesPage() {
   const openCreateModal = () => {
     setEditingBranch(null);
     setFormData({
-      
       branchName: '',
       location: '',
       status: 'active',
-      username:'',
-      password:''
+      username: '',
+      password: ''
     });
     setError('');
     setSuccessMessage('');
@@ -101,11 +94,10 @@ export default function BranchesPage() {
   const openEditModal = (branch) => {
     setEditingBranch(branch);
     setFormData({
-      
       branchName: branch.branchName || '',
       location: branch.location || '',
-      username:branch?.user?.username || '',
-      password:branch?.user?.password || '',
+      username: branch?.user?.username || '',
+      password: branch?.user?.password || '',
       status: branch.status || 'active'
     });
     setError('');
@@ -186,7 +178,6 @@ export default function BranchesPage() {
       const response = await apiRequest(`/branches/${branch._id}`, {
         method: 'PUT',
         body: JSON.stringify({
-          
           branchName: branch.branchName,
           location: branch.location || '',
           status: newStatus
@@ -277,10 +268,11 @@ export default function BranchesPage() {
           type="text"
           placeholder="Search by  branch name, or location..."
           value={searchTerm}
-          onChange={(e) => {setSearchTerm(e.target.value);
+          onChange={(e) => {
+            setSearchTerm(e.target.value);
             setPage(1);
           }
-        }
+          }
           className="w-full pl-10 pr-4 py-2 border border-gray-400 rounded-lg text-black focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none"
         />
       </div>
@@ -303,22 +295,22 @@ export default function BranchesPage() {
               filteredBranches.map((branch, index) => (
                 <tr key={branch._id || index} className="hover:bg-gray-50">
                   <td className="px-6 py-4 text-sm text-gray-900">
-                                                {(page - 1) * 5 + index + 1}
-                                              </td>
+                    {(page - 1) * 5 + index + 1}
+                  </td>
 
                   <td className="px-6 py-4 text-sm text-gray-900">{branch.branchName}</td>
                   <td className="px-6 py-4 text-sm text-gray-900">{branch.location || 'Not specified'}</td>
                   <td className="px-6 py-4 text-sm">
                     <span className={`px-2 py-1 rounded-full text-xs ${branch.status === 'active'
-                        ? 'bg-green-100 text-green-700'
-                        : 'bg-red-100 text-red-700'
+                      ? 'bg-green-100 text-green-700'
+                      : 'bg-red-100 text-red-700'
                       }`}>
                       {branch.status || 'active'}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-sm">
                     <div className="flex space-x-2">
-                      
+
                       <button
                         onClick={() => openEditModal(branch)}
                         className="p-1 text-blue-600 hover:bg-blue-100 rounded transition"
@@ -349,12 +341,12 @@ export default function BranchesPage() {
       </div>
       <div>{/* PAGINATION */}
         <Pagination
-            page={page}
-            totalPages={totalPages}
-            setPage={setPage}
-          />
+          page={page}
+          totalPages={totalPages}
+          setPage={setPage}
+        />
       </div>
-            
+
       {/* CREATE/EDIT MODAL */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -391,7 +383,7 @@ export default function BranchesPage() {
             )}
             <form onSubmit={handleSubmit}>
               <div className="space-y-4">
-                
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Branch Name *
@@ -436,9 +428,9 @@ export default function BranchesPage() {
                     <option value="inactive">Inactive</option>
                   </select>
                 </div>
-              <div>
+                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Username *
+                    Username *
                   </label>
                   <input
                     type="text"
@@ -450,9 +442,9 @@ export default function BranchesPage() {
                     className="w-full px-3 py-2 border text-gray-700 border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none disabled:bg-gray-100"
                     placeholder="Enter Username"
                   />
-              </div>
+                </div>
 
-              <div>
+                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Password *
                   </label>

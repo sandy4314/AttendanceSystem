@@ -6,10 +6,11 @@ import { useEffect, useState } from "react";
 import { apiRequest } from "@/services/api";
 import {Building,BookOpen,Layers,Users,GraduationCap,Grid,RefreshCw} from 'lucide-react';
 import Pagination from '@/components/Pagination';
+import {useAuth} from '@/context/AuthContext';
 
 export default function MyAssigns(){
 
-  
+  const {user,loading:authLoading}= useAuth();
   const [userid,setUserId]=useState('');
   const [teacherdata,setTeacherData]=useState([]);
   const [loading, setLoading] = useState(true);
@@ -19,21 +20,14 @@ export default function MyAssigns(){
   const limit=5;
   // const router=useRouter();
 
-  useEffect(() => {
-    const user = JSON.parse(localStorage.getItem("user"));
-    console.log(user?.linkedId);
-    setUserId(user.linkedId);
-    
-    }, []);
-
     
     useEffect(()=>{
 
-        if(userid){
+        if(user){
             fetchDashboardData();
         }
 
-    },[userid,page]);
+    },[user,page]);
 
     const handleRefresh = () => {
     fetchDashboardData();
@@ -45,7 +39,7 @@ export default function MyAssigns(){
       try
       {
 
-      const teacherRes = await apiRequest(`/assignsubject/teacher/${userid}?/&page=${page}&limit=${limit}`);
+      const teacherRes = await apiRequest(`/assignsubject/teacher/${user.linkedId}?/&page=${page}&limit=${limit}`);
       let teacherArray = [];
         
 
