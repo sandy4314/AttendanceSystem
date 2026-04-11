@@ -4,8 +4,15 @@ import Layout from '../../../components/Layout';
 import { useState, useEffect } from 'react';
 import { apiRequest } from '../../../services/api';
 import { Building, Plus, Edit, Trash2, Search, X, AlertCircle, Eye, User, ChevronDown, RefreshCw, BookOpen } from 'lucide-react';
-import Pagination from '@/components/Pagination';
+import dynamic from "next/dynamic";
 
+const Pagination = dynamic(() => import('@/components/Pagination'), {
+  loading: () => <p>Loading pagination...</p>,
+});
+
+const AssignBranchModal = dynamic(() => import('@/components/AssignBranchModal'), {
+  loading: () => <p>Loading form...</p>,
+});
 
 export default function AssignBranch() {
 
@@ -14,13 +21,10 @@ export default function AssignBranch() {
   const [assignments, setAssignment] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
-
   const [selectedBranch, setSelectedBranch] = useState('all');
   const [selectedTeacher, setSelectedTeacher] = useState('all');
-
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
@@ -43,7 +47,6 @@ export default function AssignBranch() {
 
 
   useEffect(() => {
-
     fetchAssignments();
   }, [page, debouncedSearch, selectedBranch]);
 
@@ -51,7 +54,6 @@ export default function AssignBranch() {
   const handleRetry = () => {
     setError('');
     fetchAssignments();
-
   };
 
   useEffect(() => {
@@ -408,110 +410,20 @@ export default function AssignBranch() {
         <Pagination totalPages={totalPages} setPage={setPage} page={page} />
       </div>
 
-      {/* CREATE ASSIGNMENT MODAL */}
+
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 overflow-y-auto">
-          <div className="bg-white rounded-xl w-full max-w-2xl p-6 m-4">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-2xl font-bold text-gray-900">Assign Subject to Teacher</h3>
-              <button
-                onClick={() => setShowModal(false)}
-                className="p-2 hover:bg-gray-100 rounded-full transition"
-                disabled={submitting}
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            <form onSubmit={handleSubmit}>
-              <div className="space-y-4">
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Select Branch <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    name="branch"
-                    value={formData.branch}
-                    onChange={handleInputChange}
-                    className="w-full p-2 border border-gray-300 text-black rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none"
-                    required
-                    disabled={submitting}
-                  >
-                    <option value="">Choose a branch</option>
-                    {branches.length > 0 ? (
-                      branches.map(branch => (
-                        <option key={branch._id} value={branch._id}>
-                          {branch.branchName}
-                        </option>
-                      ))
-                    ) : (
-                      <option value="" disabled>No branches available</option>
-                    )}
-                  </select>
-                </div>
-
-
-                {/* Teacher Selection */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Select Teacher <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    name="teacher"
-                    value={formData.teacher}
-                    onChange={handleInputChange}
-                    className="w-full p-2 border border-gray-300 text-black rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none"
-                    required
-                    disabled={submitting}
-                  >
-                    <option value="">Choose a teacher</option>
-                    {teachers.length > 0 ? (
-                      teachers.map(teacher => (
-                        <option key={teacher._id} value={teacher._id}>
-                          {teacher.fullName} {teacher.employeeId ? `- ${teacher.employeeId}` : ''}
-                        </option>
-                      ))
-                    ) : (
-                      <option value="" disabled>No teachers available</option>
-                    )}
-                  </select>
-                  {teachers.length === 0 && (
-                    <p className="text-xs text-amber-600 mt-1">
-                      No teachers found. Please add teachers first.
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex justify-end gap-3 mt-6 pt-4 border-t">
-                <button
-                  type="button"
-                  onClick={() => setShowModal(false)}
-                  className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-medium"
-                  disabled={submitting}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={submitting || teachers.length === 0 || branches.length === 0}
-                  className="px-6 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition disabled:opacity-50 flex items-center gap-2 font-medium"
-                >
-                  {submitting ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      Assigning...
-                    </>
-                  ) : (
-                    'Assign Branch'
-                  )}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+        <AssignBranchModal
+          formData={formData}
+          handleInputChange={handleInputChange}
+          handleSubmit={handleSubmit}
+          submitting={submitting}
+          error={error}
+          successMessage={successMessage}
+          setShowModal={setShowModal}
+          branches={branches}
+          teachers={teachers}
+        />
       )}
-    </Layout>
+    </Layout>  
   );
 }

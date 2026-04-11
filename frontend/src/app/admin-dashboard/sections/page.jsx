@@ -3,8 +3,16 @@
 import Layout from '../../../components/Layout';
 import { useState, useEffect } from 'react';
 import { apiRequest } from '../../../services/api';
-import {Building,Plus,Edit,Trash2,Search,X,AlertCircle,Eye,User,ChevronDown} from 'lucide-react';
-import Pagination from '@/components/Pagination';
+import { Building, Plus, Edit, Trash2, Search, X, AlertCircle, Eye, User, ChevronDown } from 'lucide-react';
+import dynamic from "next/dynamic";
+
+const Pagination = dynamic(() => import('@/components/Pagination'), {
+  loading: () => <p>Loading pagination...</p>,
+});
+
+const SectionModal = dynamic(() => import('@/components/SectionModal'), {
+  loading: () => <p>Loading form...</p>,
+});
 
 export default function SectionsPage() {
   const [sections, setSections] = useState([]);
@@ -41,47 +49,38 @@ export default function SectionsPage() {
   });
 
   useEffect(() => {
-  fetchSections(page);
-  fetchTeachers();
-}, [page, selectedBranch, selectedClass,debouncedSearch]);
- 
-
-useEffect(() => {
-  const timer = setTimeout(() => {
-    setDebouncedSearch(searchTerm);
-  }, 1000);
-
-  return () => clearTimeout(timer);
-}, [searchTerm]);
+    fetchSections(page);
+    fetchTeachers();
+  }, [page, selectedBranch, selectedClass, debouncedSearch]);
 
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+    }, 1000);
 
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
-  
-
-  const fetchSections = async (pageNumber=1) => {
+  const fetchSections = async (pageNumber = 1) => {
     try {
       setLoading(true);
       setError('');
-      
-      let url=`/sections?page=${pageNumber}&limit=${LIMIT}`;
+
+      let url = `/sections?page=${pageNumber}&limit=${LIMIT}`;
 
       if (selectedBranch !== "all") {
-      url += `&branchId=${selectedBranch}`;
-    }
+        url += `&branchId=${selectedBranch}`;
+      }
 
       if (selectedClass !== "all") {
         url += `&classId=${selectedClass}`;
-    }
-
-
-    if (debouncedSearch !== '') {
-        url += `&search=${debouncedSearch}`;
       }
 
 
-
-
+      if (debouncedSearch !== '') {
+        url += `&search=${debouncedSearch}`;
+      }
 
       const response = await apiRequest(url);
       if (response && response.success) {
@@ -99,13 +98,10 @@ useEffect(() => {
     }
   };
 
-  
-  useEffect(()=>{
 
+  useEffect(() => {
     fetchBranches();
-  },[])
-
- 
+  }, [])
 
   const fetchBranches = async () => {
     try {
@@ -119,20 +115,20 @@ useEffect(() => {
   };
 
   const fetchClassesByBranch = async (branchId) => {
-  try {
-    const response = await apiRequest(`/classes?branchId=${branchId}&limit=100`);
+    try {
+      const response = await apiRequest(`/classes?branchId=${branchId}&limit=100`);
 
-    if (response && response.success) {
-      setAvailableClasses(response.data || []);
-    } else {
+      if (response && response.success) {
+        setAvailableClasses(response.data || []);
+      } else {
+        setAvailableClasses([]);
+      }
+
+    } catch (error) {
+      console.error("Error fetching classes:", error);
       setAvailableClasses([]);
     }
-
-  } catch (error) {
-    console.error("Error fetching classes:", error);
-    setAvailableClasses([]);
-  }
-};
+  };
 
   const fetchTeachers = async () => {
     try {
@@ -155,9 +151,7 @@ useEffect(() => {
     });
     setError('');
     if (name === 'branch' && value && !editingSection) {
-      
       fetchClassesByBranch(value);
-
       setFormData(prev => ({
         ...prev,
         classRef: ''
@@ -188,8 +182,6 @@ useEffect(() => {
       sectionIncharge: section.sectionIncharge?._id || section.sectionIncharge || ''
     });
     const branchId = section.branch?._id || section.branch;
-    
-
     setError('');
     setSuccessMessage('');
     setShowModal(true);
@@ -247,10 +239,14 @@ useEffect(() => {
       if (response && response.success) {
         setSuccessMessage(editingSection ? 'Section updated successfully!' : 'Section created successfully!');
         await fetchSections();
-
-
         setTimeout(() => {
           setShowModal(false);
+          setFormData({
+            branch: '',
+            classRef: '',
+            sectionName: '',
+            sectionIncharge: ''
+          });
           setSuccessMessage('');
         }, 1500);
       } else {
@@ -285,9 +281,9 @@ useEffect(() => {
       });
       if (response && response.success) {
         setSuccessMessage('Section deleted successfully!');
-        
+
         await fetchSections();
-        
+
         setTimeout(() => setSuccessMessage(''), 3000);
       } else {
         setError(response?.message || 'Delete failed');
@@ -300,9 +296,6 @@ useEffect(() => {
 
   // Filter sections based on search and branch filter
   const filteredSections = sections;
-
-    
-
   const getBranchName = (branch) => {
     if (!branch) return 'N/A';
     if (typeof branch === 'object') return branch.branchName || 'Unknown';
@@ -384,18 +377,17 @@ useEffect(() => {
           <select
             value={selectedBranch}
             onChange={(e) => {
-                  const branchId = e.target.value;
+              const branchId = e.target.value;
 
-                  setSelectedBranch(branchId);
-                  setSelectedClass("all");
-                  setPage(1);
+              setSelectedBranch(branchId);
+              setSelectedClass("all");
+              setPage(1);
 
-                  if (branchId !== "all") {
-                    fetchClassesByBranch(branchId);
-                  } else {
-                    setAvailableClasses([]);
-                  }
-
+              if (branchId !== "all") {
+                fetchClassesByBranch(branchId);
+              } else {
+                setAvailableClasses([]);
+              }
             }}
 
             className="w-full pl-3 pr-10 py-2 border border-gray-400 text-black rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none appearance-none bg-white"
@@ -411,23 +403,22 @@ useEffect(() => {
         </div>
 
         {/* Class Filter - Only shown when branch is selected */}
-        
-          <div className="relative">
-            <select
-              value={selectedClass}
-              onChange={(e) => setSelectedClass(e.target.value)}
-              className="text-black w-full pl-3 pr-10 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none appearance-none bg-white"
-            >
-              <option value="all">All Classes in Branch</option>
-              {availableClasses.map(cls => (
-                <option key={cls._id} value={cls._id}>
-                  {cls.className}
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" size={18} />
-          </div>
-        
+
+        <div className="relative">
+          <select
+            value={selectedClass}
+            onChange={(e) => setSelectedClass(e.target.value)}
+            className="text-black w-full pl-3 pr-10 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none appearance-none bg-white"
+          >
+            <option value="all">All Classes in Branch</option>
+            {availableClasses.map(cls => (
+              <option key={cls._id} value={cls._id}>
+                {cls.className}
+              </option>
+            ))}
+          </select>
+          <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" size={18} />
+        </div>
 
         {/* Search Bar */}
         <div className={`relative ${selectedBranch !== 'all' ? 'md:col-span-2' : 'md:col-span-3'}`}>
@@ -436,8 +427,7 @@ useEffect(() => {
             type="text"
             placeholder="Search by section name.."
             value={searchTerm}
-            onChange={(e) =>{setSearchTerm(e.target.value);setPage(1)}}
-            
+            onChange={(e) => { setSearchTerm(e.target.value); setPage(1) }}
             className="w-full pl-10 pr-4 py-2 border border-gray-400 text-black rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none"
           />
         </div>
@@ -520,169 +510,24 @@ useEffect(() => {
       </div>
       <div>
 
-              <Pagination page={page} setPage={setPage} totalPages={totalPages}/>
+        <Pagination page={page} setPage={setPage} totalPages={totalPages} />
 
       </div>
       {/* CREATE/EDIT MODAL */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 overflow-y-auto">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6 my-8">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-bold text-gray-900">
-                {editingSection ? 'Edit Section' : 'Create New Section'}
-              </h3>
-              <button
-                onClick={() => setShowModal(false)}
-                className="text-gray-500 hover:text-gray-700 transition"
-                disabled={submitting}
-              >
-                <X size={20} />
-              </button>
-            </div>
-            {/* Modal Error Message */}
-            {error && (
-              <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg text-sm flex items-center gap-2">
-                <AlertCircle size={16} />
-                <span>{error}</span>
-              </div>
-            )}
-            {/* Modal Success Message */}
-            {successMessage && (
-              <div className="mb-4 bg-green-50 border border-green-200 text-green-700 px-3 py-2 rounded-lg text-sm flex items-center gap-2">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                <span>{successMessage}</span>
-              </div>
-            )}
-            <form onSubmit={handleSubmit}>
-              <div className="space-y-4">
-                {/* Branch Selection - Disabled in edit mode */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Branch *
-                  </label>
-                  <select
-                    name="branch"
-                    value={formData.branch}
-                    onChange={handleInputChange}
-                    required={!editingSection}
-                    disabled={submitting || editingSection}
-                    className="w-full px-3 py-2 border border-gray-400 text-black rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none disabled:bg-gray-100"
-                  >
-                    <option value="">Select Branch</option>
-                    {branches.map(branch => (
-                      <option key={branch._id} value={branch._id}>
-                        {branch.branchName}
-                      </option>
-                    ))}
-                  </select>
-                  {editingSection && (
-                    <p className="text-xs text-gray-500 mt-1">Branch cannot be changed after creation</p>
-                  )}
-                </div>
-                {/* Class Selection - Disabled in edit mode */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Class *
-                  </label>
-                  <select
-                    name="classRef"
-                    value={formData.classRef}
-                    onChange={handleInputChange}
-                    required={!editingSection}
-                    disabled={submitting || editingSection || !formData.branch}
-                    className="w-full px-3 py-2 border border-gray-400 text-black rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none disabled:bg-gray-100"
-                  >
-                    <option value="">Select Class</option>
-                    {availableClasses.map(cls => (
-                      <option key={cls._id} value={cls._id}>
-                        {cls.className}
-                      </option>
-                    ))}
-                  </select>
-                  {!formData.branch && !editingSection && (
-                    <p className="text-xs text-gray-500 mt-1">Please select a branch first</p>
-                  )}
-                  {editingSection && (
-                    <p className="text-xs text-gray-500 mt-1">Class cannot be changed after creation</p>
-                  )}
-                </div>
-                {/* Section Name */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Section Name *
-                  </label>
-                  <input
-                    type="text"
-                    name="sectionName"
-                    value={formData.sectionName}
-                    onChange={handleInputChange}
-                    required
-                    disabled={submitting}
-                    className="w-full px-3 py-2 border border-gray-400 text-black rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none disabled:bg-gray-100"
-                    placeholder="e.g., section-1 section-2"
-                  />
-                </div>
-                {/* Section Teacher */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Section Teacher (Optional)
-                  </label>
-                  <select
-                    name="sectionIncharge"
-                    value={formData.sectionIncharge}
-                    onChange={handleInputChange}
-                    disabled={submitting}
-                    className="w-full px-3 py-2 border border-gray-400 text-black rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none disabled:bg-gray-100"
-                  >
-                    <option value="">Select Section Teacher</option>
-                    {teachers
-                      .filter(teacher => {
-                        // Optional: Filter teachers by branch if needed
-                        return true;
-                      })
-                      .map(teacher => (
-                        <option key={teacher._id} value={teacher._id}>
-                          {teacher.fullName} {teacher.phone ? `(${teacher.phone})` : ''}
-                        </option>
-                      ))}
-                  </select>
-                  <p className="text-xs text-gray-500 mt-1">You can assign or change the section teacher later</p>
-                </div>
-                {/* Additional info for editing */}
-                {editingSection && (
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-700">
-                    <p className="flex items-center gap-2">
-                      <AlertCircle size={16} />
-                      You can update the section name and section teacher. Branch and class cannot be changed.
-                    </p>
-                  </div>
-                )}
-              </div>
-              <div className="flex justify-end space-x-3 mt-6">
-                <button
-                  type="button"
-                  onClick={() => setShowModal(false)}
-                  disabled={submitting}
-                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition disabled:opacity-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition disabled:opacity-50 flex items-center gap-2"
-                >
-                  {submitting && (
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  )}
-                  {submitting ? 'Saving...' : (editingSection ? 'Update Section' : 'Create Section')}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+        <SectionModal
+          editingSection={editingSection}
+          formData={formData}
+          handleInputChange={handleInputChange}
+          handleSubmit={handleSubmit}
+          submitting={submitting}
+          error={error}
+          successMessage={successMessage}
+          setShowModal={setShowModal}
+          branches={branches}
+          availableClasses={availableClasses}
+          teachers={teachers}
+        />
       )}
       {/* SECTION DETAILS MODAL */}
       {showDetailsModal && selectedSection && (

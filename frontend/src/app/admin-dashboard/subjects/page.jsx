@@ -3,8 +3,16 @@
 import Layout from '../../../components/Layout';
 import { useState, useEffect } from 'react';
 import { apiRequest } from '../../../services/api';
-import {Plus,Edit,Trash2,Search,X,BookOpen,AlertCircle,Eye,BookMarked,Hash,RefreshCw,Server} from 'lucide-react';
-import Pagination from '@/components/Pagination';
+import { Plus, Edit, Trash2, Search, X, BookOpen, AlertCircle, Eye, BookMarked, Hash, RefreshCw, Server } from 'lucide-react';
+import dynamic from "next/dynamic";
+
+const Pagination = dynamic(() => import('@/components/Pagination'), {
+  loading: () => <p>Loading pagination...</p>,
+});
+
+const SubjectModal = dynamic(() => import('@/components/SubjectModal'), {
+  loading: () => <p>Loading form...</p>,
+});
 
 export default function SubjectsPage() {
   const [subjects, setSubjects] = useState([]);
@@ -17,13 +25,10 @@ export default function SubjectsPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
-
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-
   const [debouncedSearch, setDebouncedSearch] = useState('');
-
-  const limit=5;
+  const limit = 5;
 
   // Form state
   const [formData, setFormData] = useState({
@@ -33,33 +38,29 @@ export default function SubjectsPage() {
 
   useEffect(() => {
     fetchSubjects();
-  }, [page,debouncedSearch]);
+  }, [page, debouncedSearch]);
 
-
- 
   useEffect(() => {
-  const timer = setTimeout(() => {
-    setDebouncedSearch(searchTerm);
-  }, 1000);
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+    }, 1000);
 
-  return () => clearTimeout(timer);
-}, [searchTerm]);
-
-
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   const fetchSubjects = async () => {
     try {
       setLoading(true);
       setError('');
       console.log('Fetching subjects from API...');
-      let url=`/subjects?page=${page}&limit=${limit}`;
+      let url = `/subjects?page=${page}&limit=${limit}`;
       if (debouncedSearch !== '') {
         url += `&search=${debouncedSearch}`;
       }
       const response = await apiRequest(url);
       console.log('Subjects API response:', response);
-      
-     
+
+
       if (response && response.success) {
         setSubjects(response.data);
         setTotalPages(response.totalPages || 1);
@@ -69,17 +70,15 @@ export default function SubjectsPage() {
       }
     } catch (error) {
       console.error('Error fetching subjects:', error);
-       setSubjects([]);
-        
-      } 
-     
-     finally {
+      setSubjects([]);
+    }
+
+    finally {
       setLoading(false);
     }
   };
 
   const handleRetry = () => {
-    
   };
 
   const handleInputChange = (e) => {
@@ -123,7 +122,7 @@ export default function SubjectsPage() {
     setSubmitting(true);
     setError('');
     setSuccessMessage('');
-    
+
     try {
       let response;
       if (editingSubject) {
@@ -151,13 +150,13 @@ export default function SubjectsPage() {
           setError('Subject name is required');
           setSubmitting(false);
           return;
-        } 
+        }
         const createData = {
           subjectName: formData.subjectName.trim()
-        };     
+        };
         if (formData.subjectCode && formData.subjectCode.trim()) {
           createData.subjectCode = formData.subjectCode.trim();
-        }      
+        }
         console.log('Creating subject with data:', createData);
         response = await apiRequest('/subjects', {
           method: 'POST',
@@ -165,13 +164,17 @@ export default function SubjectsPage() {
         });
       }
       console.log('Save response:', response);
-      
+
       // Check for success
       if (response?.data || response?._id || response?.success === true) {
         setSuccessMessage(editingSubject ? 'Subject updated successfully!' : 'Subject created successfully!');
         await fetchSubjects();
         setTimeout(() => {
           setShowModal(false);
+          setFormData({
+            subjectName: '',
+            subjectCode: ''
+          });
           setSuccessMessage('');
         }, 1500);
       } else {
@@ -196,7 +199,7 @@ export default function SubjectsPage() {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Are you sure you want to delete this subject? This action cannot be undone and may affect teacher assignments.')) return; 
+    if (!confirm('Are you sure you want to delete this subject? This action cannot be undone and may affect teacher assignments.')) return;
     try {
       setError('');
       const response = await apiRequest(`/subjects/${id}`, {
@@ -219,7 +222,7 @@ export default function SubjectsPage() {
   const filteredSubjects = subjects;
 
   // Loading state with server status
-  if (loading ) {
+  if (loading) {
     return (
       <Layout>
         <div className="min-h-screen flex items-center justify-center">
@@ -235,7 +238,7 @@ export default function SubjectsPage() {
       </Layout>
     );
   }
- 
+
   return (
     <Layout>
       {/* HEADER */}
@@ -293,10 +296,10 @@ export default function SubjectsPage() {
           type="text"
           placeholder="Search by subject name or code..."
           value={searchTerm}
-          onChange={(e) => {setSearchTerm(e.target.value);setPage(1)}}
+          onChange={(e) => { setSearchTerm(e.target.value); setPage(1) }}
           className="w-full pl-10 pr-4 py-2 border border-gray-300 text-black rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none"
         />
-        
+
       </div>
       {/* SUBJECTS TABLE */}
       <div className="bg-white rounded-xl shadow overflow-hidden">
@@ -360,7 +363,7 @@ export default function SubjectsPage() {
             ) : (
               <tr>
                 <td colSpan="4" className="px-6 py-8 text-center text-gray-500">
-                  {searchTerm 
+                  {searchTerm
                     ? 'No subjects match your search criteria.'
                     : 'No subjects found. Click "Add Subject" to create one.'}
                 </td>
@@ -372,109 +375,25 @@ export default function SubjectsPage() {
       </div>
 
       <div>
-              <Pagination
-                  page={page}
-                  totalPages={totalPages}
-                  setPage={setPage}
-                />
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          setPage={setPage}
+        />
       </div>
 
       {/* CREATE/EDIT MODAL */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 overflow-y-auto">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6 my-8">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-bold text-gray-900">
-                {editingSubject ? 'Edit Subject' : 'Add New Subject'}
-              </h3>
-              <button
-                onClick={() => setShowModal(false)}
-                className="text-gray-500 hover:text-gray-700 transition"
-                disabled={submitting}
-              >
-                <X size={20} />
-              </button>
-            </div>
-            {/* Modal Error Message */}
-            {error && (
-              <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg text-sm flex items-center gap-2">
-                <AlertCircle size={16} />
-                <span>{error}</span>
-              </div>
-            )}
-            {/* Modal Success Message */}
-            {successMessage && (
-              <div className="mb-4 bg-green-50 border border-green-200 text-green-700 px-3 py-2 rounded-lg text-sm flex items-center gap-2">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                <span>{successMessage}</span>
-              </div>
-            )}
-            <form onSubmit={handleSubmit}>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Subject Name *
-                  </label>
-                  <input
-                    type="text"
-                    name="subjectName"
-                    value={formData.subjectName}
-                    onChange={handleInputChange}
-                    required
-                    disabled={submitting}
-                    className="w-full px-3 py-2 border border-gray-300 text-black rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none disabled:bg-gray-100"
-                    placeholder="e.g., Mathematics, Science, English"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                    Subject name must be unique
-                  </p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Subject Code (Optional)
-                  </label>
-                  <input
-                    type="text"
-                    name="subjectCode"
-                    value={formData.subjectCode}
-                    onChange={handleInputChange}
-                    disabled={submitting}
-                    className="w-full px-3 py-2 border border-gray-300 text-black rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none disabled:bg-gray-100"
-                    placeholder="e.g., MATH101, SCI202, ENG103"
-                  />
-                </div>
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-700">
-                  <p className="flex items-center gap-2">
-                    <AlertCircle size={16} />
-                    Subject names must be unique across the system.
-                  </p>
-                </div>
-              </div>
-              <div className="flex justify-end space-x-3 mt-6">
-                <button
-                  type="button"
-                  onClick={() => setShowModal(false)}
-                  disabled={submitting}
-                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition disabled:opacity-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition disabled:opacity-50 flex items-center gap-2"
-                >
-                  {submitting && (
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  )}
-                  {submitting ? 'Saving...' : (editingSubject ? 'Update Subject' : 'Add Subject')}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+        <SubjectModal
+          editingSubject={editingSubject}
+          formData={formData}
+          handleInputChange={handleInputChange}
+          handleSubmit={handleSubmit}
+          submitting={submitting}
+          error={error}
+          successMessage={successMessage}
+          setShowModal={setShowModal}
+        />
       )}
       {/* SUBJECT DETAILS MODAL */}
       {showDetailsModal && selectedSubject && (
@@ -499,7 +418,7 @@ export default function SubjectsPage() {
                       <BookMarked size={16} className="text-amber-500" />
                       <p className="font-medium text-gray-900 ">{selectedSubject.subjectName}</p>
                     </div>
-                  </div>                 
+                  </div>
                   {selectedSubject.subjectCode && (
                     <div>
                       <p className="text-sm text-gray-500">Subject Code</p>
@@ -508,15 +427,15 @@ export default function SubjectsPage() {
                         <p className="font-mono text-gray-900">{selectedSubject.subjectCode}</p>
                       </div>
                     </div>
-                  )} 
+                  )}
                   <div>
                     <p className="text-sm text-gray-500">Subject ID</p>
                     <p className="font-mono text-sm text-gray-900">{selectedSubject._id}</p>
-                  </div>            
+                  </div>
                   <div>
                     <p className="text-sm text-gray-500">Created At</p>
                     <p className="text-gray-900">{selectedSubject.createdAt ? new Date(selectedSubject.createdAt).toLocaleString() : 'N/A'}</p>
-                  </div>                  
+                  </div>
                   <div>
                     <p className="text-sm text-gray-500">Last Updated</p>
                     <p className="text-gray-900">{selectedSubject.updatedAt ? new Date(selectedSubject.updatedAt).toLocaleString() : 'N/A'}</p>

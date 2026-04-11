@@ -5,17 +5,23 @@ const DashboardStats = dynamic(() => import("@/components/DashboardStats"), {
   loading: () => <p>Loading stats...</p>,
 });
 
+const RecentBranches = dynamic(() => import('@/components/RecentBranches'), {
+  loading: () => <p>Loading branches...</p>,
+});
+
+const RecentTeachers = dynamic(() => import('@/components/RecentTeachers'), {
+  loading: () => <p>Loading teachers...</p>,
+});
 
 import { useState, useEffect } from 'react';
 import { apiRequest } from '../../services/api';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Building, BookOpen, Layers, Users, GraduationCap, Grid, RefreshCw, BookMarked } from 'lucide-react';
-import {useAuth} from '@/context/AuthContext';
+import { useAuth } from '@/context/AuthContext';
 
 export default function AdminDashboard() {
   const router = useRouter();
-
   const [stats, setStats] = useState({
     totalBranches: 0,
     totalClasses: 0,
@@ -29,9 +35,8 @@ export default function AdminDashboard() {
   const [recentTeachers, setRecentTeachers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const { user, loading: authLoading } = useAuth();
 
-  const { user, loading:authLoading } = useAuth();
-  
   useEffect(() => {
     if (user) {
       fetchDashboardData();
@@ -43,7 +48,6 @@ export default function AdminDashboard() {
       setLoading(true);
       setError('');
 
-
       // Fetch all data in parallel for better performance
       const [branchesRes, teachersRes, studentsRes, classesRes, sectionsRes, subjectsRes] = await Promise.allSettled([
         apiRequest('/branches/all'),
@@ -53,8 +57,6 @@ export default function AdminDashboard() {
         apiRequest('/sections/all'),
         apiRequest('/subjects/all')
       ]);
-
-       
 
       // Process Branches
       if (branchesRes.status === 'fulfilled' && branchesRes.value) {
@@ -67,7 +69,7 @@ export default function AdminDashboard() {
         }
 
         setRecentBranches(branches.slice(0, 2));
-        setStats(prev => ({...prev,totalBranches: branches.length}));
+        setStats(prev => ({ ...prev, totalBranches: branches.length }));
       }
 
       // Process Teachers
@@ -128,8 +130,8 @@ export default function AdminDashboard() {
       }
 
       // Process Subjects
-      if (subjectsRes.status === 'fulfilled' && subjectsRes.value) {  
-        const subjectsData = subjectsRes.value;  
+      if (subjectsRes.status === 'fulfilled' && subjectsRes.value) {
+        const subjectsData = subjectsRes.value;
         let subjectsList = [];
 
         if (subjectsData.success && Array.isArray(subjectsData.data)) {
@@ -138,7 +140,7 @@ export default function AdminDashboard() {
           subjectsList = subjectsData;
         }
 
-        setStats(prev => ({ ...prev, totalSubjects: subjectsList.length })); 
+        setStats(prev => ({ ...prev, totalSubjects: subjectsList.length }));
       }
     } catch (err) {
       console.error('Dashboard error:', err);
@@ -231,65 +233,12 @@ export default function AdminDashboard() {
       {/* ✅ LAZY LOADED STATS */}
       <DashboardStats stats={adminStatsArray} />
 
-      {/* RECENT ACTIVITY SECTION */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Recent Branches */}
-        <div className="bg-white rounded-xl shadow p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Branches</h3>
-          {recentBranches.length > 0 ? (
-            <div className="space-y-3">
-              {recentBranches.map((branch, idx) => (
-                <div key={branch._id || idx} className="flex items-center justify-between border-b pb-2 last:border-0">
-                  <div>
-                    <p className="font-medium text-gray-900">{branch.branchName}</p>
-                    <p className="text-sm text-gray-500">{branch.schoolName || 'N/A'}</p>
-                  </div>
-                  <span className={`text-xs px-2 py-1 rounded-full ${branch.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
-                    }`}>
-                    {branch.status || 'active'}
-                  </span>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-gray-500 text-center py-4">No branches found</p>
-          )}
-          <Link
-            href="/admin-dashboard/branches"
-            className="mt-4 inline-flex items-center text-amber-500 hover:text-amber-600"
-          >
-            View All ({stats.totalBranches}) →
-          </Link>
-        </div>
-
-        {/* Recent Teachers */}
-        <div className="bg-white rounded-xl shadow p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Teachers</h3>
-          {recentTeachers.length > 0 ? (
-            <div className="space-y-3">
-              {recentTeachers.map((teacher, idx) => (
-                <div key={teacher._id || idx} className="flex items-center justify-between border-b pb-2 last:border-0">
-                  <div>
-                    <p className="font-medium text-gray-900">{teacher.fullName || teacher.name}</p>
-                    <p className="text-sm text-gray-500">{teacher.phone || teacher.email || 'No contact'}</p>
-                  </div>
-                  <span className="text-xs text-gray-500">
-                    {teacher.salary ? `₹${teacher.salary.toLocaleString()}` : 'N/A'}
-                  </span>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-gray-500 text-center py-4">No teachers found</p>
-          )}
-          <Link
-            href="/admin-dashboard/teachers"
-            className="mt-4 inline-flex items-center text-amber-500 hover:text-amber-600"
-          >
-            View All ({stats.totalTeachers}) →
-          </Link>
-        </div>
+      {/* Lazy Sections */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+        <RecentBranches data={recentBranches} total={stats.totalBranches} />
+        <RecentTeachers data={recentTeachers} total={stats.totalTeachers} />
       </div>
+
     </Layout>
   );
 }

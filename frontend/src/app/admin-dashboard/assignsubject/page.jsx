@@ -4,7 +4,11 @@ import Layout from '../../../components/Layout';
 import { useState, useEffect } from 'react';
 import { apiRequest } from '../../../services/api';
 import { BookOpen, Plus, Trash2, Search, X, AlertCircle, RefreshCw, ChevronDown, User, Building, Layers, Grid } from 'lucide-react';
-import Pagination from '@/components/Pagination';
+import dynamic from "next/dynamic";
+
+const Pagination = dynamic(() => import('@/components/Pagination'), {
+  loading: () => <p>Loading pagination...</p>,
+});
 
 export default function AssignSubjectPage() {
   const [assignments, setAssignments] = useState([]);
@@ -31,12 +35,9 @@ export default function AssignSubjectPage() {
   const [availableClasses, setAvailableClasses] = useState([]);
   const [availableSections, setAvailableSections] = useState([]);
 
-
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-
   const [debouncedSearch, setDebouncedSearch] = useState('');
-
   const limit = 5;
 
   // Form state
@@ -50,9 +51,7 @@ export default function AssignSubjectPage() {
 
   // Initial data fetch
   useEffect(() => {
-
     refreshTeachersAndSubjects();
-
     fetchBranches();
   }, []);
 
@@ -71,9 +70,7 @@ export default function AssignSubjectPage() {
   const fetchInitialData = async () => {
     setLoading(true);
     try {
-
       await fetchAssignments();
-
     } catch (error) {
       console.error('Error fetching initial data:', error);
       setError('Failed to load initial data. Please refresh the page.');
@@ -81,7 +78,6 @@ export default function AssignSubjectPage() {
       setLoading(false);
     }
   };
-
 
   const fetchAssignments = async () => {
     try {
@@ -104,9 +100,7 @@ export default function AssignSubjectPage() {
       }
 
       if (debouncedSearch !== '') {
-
         url += `&search=${debouncedSearch}`;
-
       }
 
       const response = await apiRequest(url);
@@ -169,7 +163,6 @@ export default function AssignSubjectPage() {
       console.error('Error fetching branches:', error);
     }
   };
-
 
 
   const fetchClassesByBranch = async (branchId) => {
@@ -308,7 +301,6 @@ export default function AssignSubjectPage() {
       console.error('Error refreshing teachers and subjects:', error);
     }
   };
-
 
   const openCreateModal = async () => {
     await refreshTeachersAndSubjects();

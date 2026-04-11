@@ -4,7 +4,11 @@ import Layout from '../../../components/Layout';
 import { useState, useEffect } from 'react';
 import { apiRequest } from '../../../services/api';
 import {Building,Plus,Edit,Trash2,Search,X,BookOpen,AlertCircle,Eye,Phone,UserCircle,ChevronDown,RefreshCw,Copy,CheckCircle,User,Lock,Key} from 'lucide-react';
-import Pagination from '@/components/Pagination';
+import dynamic from "next/dynamic";
+
+const Pagination = dynamic(() => import('@/components/Pagination'), {
+  loading: () => <p>Loading pagination...</p>,
+});
 import {useAuth} from '@/context/AuthContext';
 
 

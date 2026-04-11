@@ -1,6 +1,10 @@
 'use client';
-import DashBox from "@/components/DashBox"
 import Layout from '../../components/Layout';
+import dynamic from "next/dynamic";
+const DashboardStats = dynamic(() => import("@/components/DashboardStats"), {
+  loading: () => <p>Loading stats...</p>,
+});
+
 import { useState, useEffect } from 'react';
 import { apiRequest } from '../../services/api';
 import { Building, BookOpen, Layers, Users, GraduationCap, RefreshCw } from 'lucide-react';
@@ -11,7 +15,6 @@ export default function BranchDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [branchInfo, setBranchInfo] = useState(null);
-
   const {user,loading:authLoading }=useAuth();
 
   const [stats, setStats] = useState({
@@ -21,8 +24,6 @@ export default function BranchDashboard() {
     totalTeachers: 0,
   });
 
-  
-  
   useEffect(() => {
     if (user) {
       fetchDashboardData();
@@ -82,6 +83,33 @@ export default function BranchDashboard() {
     fetchDashboardData();
   };
 
+  const branchStatsArray = [
+    {
+      title: "Total Classes",
+      value: stats.totalClasses,
+      icon: <BookOpen className="text-blue-500" size={24} />,
+      color: "border-blue-500"
+    },
+    {
+      title: "Total Sections",
+      value: stats.totalSections,
+      icon: <Layers className="text-green-500" size={24} />,
+      color: "border-green-500"
+    },
+    {
+      title: "Total Students",
+      value: stats.totalStudents,
+      icon: <GraduationCap className="text-purple-500" size={24} />,
+      color: "border-purple-500"
+    },
+    {
+      title: "Total Teachers",
+      value: stats.totalTeachers,
+      icon: <Users className="text-orange-500" size={24} />,
+      color: "border-orange-500"
+    }
+  ];
+
   if (loading || authLoading) {
     return (
       <Layout>
@@ -129,34 +157,10 @@ export default function BranchDashboard() {
         </div>
       )}
 
-      {/* STATS GRID */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        
-        <DashBox 
-          title="Total Classes"
-          value={stats.totalClasses}
-          color="border-blue-500"
-          icon={<BookOpen className="text-blue-500" size={24} />}
-        />
-        <DashBox 
-          title="Total Sections"
-          value={stats.totalSections}
-          color="border-green-500"
-          icon={<Layers className="text-green-500" size={24} />}
-        />
-        <DashBox 
-          title="Total Students"
-          value={stats.totalStudents}
-          color="border-purple-500"
-          icon={<GraduationCap className="text-purple-500" size={24} />}
-        />
-        <DashBox 
-          title="Total Teachers"
-          value={stats.totalTeachers}
-          color="border-orange-500"
-          icon={<Users className="text-orange-500" size={24} />}
-        />
-      </div>
+      {/* ✅ LAZY LOADED STATS */}
+      <DashboardStats stats={branchStatsArray} />
+
+      
     </Layout>
   );
 }

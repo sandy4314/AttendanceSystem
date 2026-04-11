@@ -4,10 +4,13 @@ import Layout from '../../../components/Layout';
 import { useState, useEffect } from 'react';
 import { apiRequest } from '../../../services/api';
 import { useRouter } from 'next/navigation';
-import {Plus,Edit,Trash2,Search,X,AlertCircle,Phone,Eye,IndianRupee} from 'lucide-react';
-import Pagination from '@/components/Pagination';
-import {useAuth} from '@/context/AuthContext';
+import { Plus, Edit, Trash2, Search, X, AlertCircle, Phone, Eye, IndianRupee } from 'lucide-react';
+import dynamic from "next/dynamic";
 
+const Pagination = dynamic(() => import('@/components/Pagination'), {
+  loading: () => <p>Loading pagination...</p>,
+});
+import { useAuth } from '@/context/AuthContext';
 
 export default function BranchTeachers() {
   const router = useRouter();
@@ -23,25 +26,18 @@ export default function BranchTeachers() {
   const [successMessage, setSuccessMessage] = useState('');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
- 
   const [debouncedSearch, setDebouncedSearch] = useState('');
-  
-  const {user,loading:authLoading}= useAuth();
+  const { user, loading: authLoading } = useAuth();
+  const limit = 5;
 
-
-  const limit=5;
-
-
-   const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState({
     fullName: '',
     salary: '',
     phone: '',
     username: '',
     password: ''
   });
-  
 
-  
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(searchTerm);
@@ -51,54 +47,41 @@ export default function BranchTeachers() {
   }, [searchTerm]);
 
 
-  useEffect(()=>{
-    if(user){
-
-        fetchTeachers();
-
+  useEffect(() => {
+    if (user) {
+      fetchTeachers();
     }
-    
-  },[page,debouncedSearch,user])
+
+  }, [page, debouncedSearch, user])
 
   const fetchTeachers = async () => {
-  try {
-
-    setLoading(true);
-    setError("");
-
-    
-
-
-      let url=`/assignbranch/branch/${user.linkedId}?page=${page}&limit=${limit}`;
-    
-    
-
-    
-    if (debouncedSearch !== '') {
+    try {
+      setLoading(true);
+      setError("");
+      let url = `/assignbranch/branch/${user.linkedId}?page=${page}&limit=${limit}`;
+      if (debouncedSearch !== '') {
         url += `&search=${debouncedSearch}`;
       }
 
-    const response = await apiRequest(url);
+      const response = await apiRequest(url);
 
-    if (response?.success) {
-      setTeachers(response.data || []);
-      console.log("teachers",response.data);
-      setTotalPages(response.totalPages || 1);
-    } else {
-      setTeachers([]);
+      if (response?.success) {
+        setTeachers(response.data || []);
+        console.log("teachers", response.data);
+        setTotalPages(response.totalPages || 1);
+      } else {
+        setTeachers([]);
+      }
+
+    } catch (error) {
+
+      console.error(error);
+      setError("Failed to load teachers");
+    } finally {
+      setLoading(false);
+
     }
-
-  } catch (error) {
-
-    console.error(error);
-    setError("Failed to load teachers");
-
-  } finally {
-
-    setLoading(false);
-
-  }
-};
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -106,11 +89,11 @@ export default function BranchTeachers() {
       ...formData,
       [name]: value
     });
-    
+
     setError('');
   };
 
- 
+
 
   const openEditModal = (teacher) => {
     setEditingTeacher(teacher);
@@ -132,50 +115,50 @@ export default function BranchTeachers() {
   };
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  setSubmitting(true);
-  setError('');
-  setSuccessMessage('');
+    setSubmitting(true);
+    setError('');
+    setSuccessMessage('');
 
-  try {
+    try {
 
-    if (!editingTeacher) return;
+      if (!editingTeacher) return;
 
-    const updateData = {
-      fullName: formData.fullName,
-      salary: formData.salary ? parseFloat(formData.salary) : undefined,
-      phone: formData.phone
-    };
+      const updateData = {
+        fullName: formData.fullName,
+        salary: formData.salary ? parseFloat(formData.salary) : undefined,
+        phone: formData.phone
+      };
 
-    const response = await apiRequest(`/teachers/${editingTeacher?.teacher?._id}`, {
-      method: 'PUT',
-      body: JSON.stringify(updateData)
-    });
+      const response = await apiRequest(`/teachers/${editingTeacher?.teacher?._id}`, {
+        method: 'PUT',
+        body: JSON.stringify(updateData)
+      });
 
-    if (response?.success) {
+      if (response?.success) {
 
-      setSuccessMessage("Teacher Updated Successfully");
+        setSuccessMessage("Teacher Updated Successfully");
 
-      await fetchTeachers();
+        await fetchTeachers();
 
-      setTimeout(() => {
-        setShowModal(false);
-        setEditingTeacher(null);
-        setSuccessMessage('');
-      }, 1200);
+        setTimeout(() => {
+          setShowModal(false);
+          setEditingTeacher(null);
+          setSuccessMessage('');
+        }, 1200);
 
-    } else {
-      setError(response?.message || "Update failed");
+      } else {
+        setError(response?.message || "Update failed");
+      }
+
+    } catch (error) {
+      console.error(error);
+      setError(error.message || "Error saving teacher");
+    } finally {
+      setSubmitting(false);
     }
-
-  } catch (error) {
-    console.error(error);
-    setError(error.message || "Error saving teacher");
-  } finally {
-    setSubmitting(false);
-  }
-};
+  };
 
 
 
@@ -201,11 +184,11 @@ export default function BranchTeachers() {
       setError(error.message || 'Error deleting teacher. Please try again.');
     }
   };
-  
+
 
   // Filter teachers based on search
   const filteredTeachers = teachers;
-  
+
   if (loading) {
     return (
       <Layout>
@@ -226,7 +209,7 @@ export default function BranchTeachers() {
           <h2 className="text-3xl font-bold text-gray-900">Teachers</h2>
           <p className="text-gray-700">Manage all teachers</p>
         </div>
-        
+
       </div>
       {/* Error Message */}
       {error && (
@@ -258,7 +241,7 @@ export default function BranchTeachers() {
           type="text"
           placeholder="Search by name, phone, or salary..."
           value={searchTerm}
-          onChange={(e) => {setSearchTerm(e.target.value);setPage(1)}}
+          onChange={(e) => { setSearchTerm(e.target.value); setPage(1) }}
           className="w-full pl-10 pr-4 py-2 border border-gray-400 text-black rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent outline-none"
         />
       </div>
@@ -290,9 +273,9 @@ export default function BranchTeachers() {
                   <td className="px-6 py-4 text-sm text-gray-900">
                     <div className="flex items-center gap-1">
                       <IndianRupee size={14} className="text-gray-500" />
-                     {teacher?.teacher?.salary 
-                          ? teacher.teacher.salary.toLocaleString() 
-                          : 'N/A'}
+                      {teacher?.teacher?.salary
+                        ? teacher.teacher.salary.toLocaleString()
+                        : 'N/A'}
                     </div>
                   </td>
                   <td className="px-6 py-4 text-sm">
@@ -540,7 +523,7 @@ export default function BranchTeachers() {
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Created At</p>
-                    <p className="text-gray-900">{selectedTeacher?.teacher?.createdAt  || 'N/A'}</p>
+                    <p className="text-gray-900">{selectedTeacher?.teacher?.createdAt || 'N/A'}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Last Updated</p>
